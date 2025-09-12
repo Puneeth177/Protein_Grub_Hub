@@ -1,0 +1,159 @@
+<div class="cart-container reveal" role="main" aria-label="Shopping Cart">
+  <div class="cart-header">
+    <h1 id="cart-title">Shopping Cart</h1>
+    <p>Review your items and proceed to checkout</p>
+  </div>
+
+  <div class="cart-content reveal" *ngIf="cartItems$ | async as cartItems" aria-labelledby="cart-title">
+    <!-- Empty Cart -->
+    <div class="empty-cart reveal" *ngIf="cartItems.length === 0" role="alert" aria-live="polite">
+      <div class="empty-cart-content">
+        <div class="empty-cart-icon" aria-hidden="true">🛒</div>
+        <h2>Your cart is empty</h2>
+        <p>Add some delicious protein-rich meals to get started!</p>
+        <a routerLink="/meals" class="btn btn-primary" aria-label="Browse Meals">Browse Meals</a>
+      </div>
+    </div>
+
+    <!-- Cart Items -->
+  <div class="cart-layout reveal" *ngIf="cartItems.length > 0" role="region" aria-label="Cart Items">
+      <div class="cart-items reveal">
+        <div class="cart-items-header">
+          <h2>Cart Items ({{ (cartItemCount$ | async) || 0 }})</h2>
+          <button class="btn btn-outline btn-sm" (click)="clearCart()">
+            Clear Cart
+          </button>
+        </div>
+
+        <div class="cart-item reveal" *ngFor="let item of cartItems">
+          <div class="item-image">
+            <img [src]="item.meal.image_url" [alt]="'Meal: ' + item.meal.name + '. ' + (item.meal.description || '')" />
+          </div>
+          
+          <div class="item-details">
+            <h3 class="item-name">{{ item.meal.name }}</h3>
+            <p class="item-description">{{ item.meal.description }}</p>
+            
+            <div class="item-stats">
+              <span class="stat">{{ item.meal.protein_grams }}g protein</span>
+              <span class="stat">{{ item.meal.calories }} cal</span>
+              <span class="stat" *ngIf="item.meal.dietary_tags.length > 0">
+                {{ item.meal.dietary_tags[0] }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="item-controls">
+            <div class="quantity-controls">
+              <button 
+                class="quantity-btn"
+                (click)="updateQuantity(item.meal._id, item.quantity - 1)"
+              >
+                -
+              </button>
+              <span class="quantity">{{ item.quantity }}</span>
+              <button 
+                class="quantity-btn"
+                (click)="updateQuantity(item.meal._id, item.quantity + 1)"
+              >
+                +
+              </button>
+            </div>
+            
+            <div class="item-price">
+              <span class="unit-price">${{ item.meal.price }} each</span>
+              <span class="total-price">${{ (item.meal.price * item.quantity).toFixed(2) }}</span>
+            </div>
+            
+            <button 
+              class="remove-btn"
+              (click)="removeItem(item.meal._id)"
+              title="Remove item"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+  <div class="cart-summary reveal" *ngIf="cartTotal$ | async as cartTotal" role="region" aria-label="Order Summary">
+        <h3>Order Summary</h3>
+        
+        <!-- Free Delivery Progress -->
+        <div class="delivery-progress" *ngIf="!isEligibleForFreeDelivery(cartTotal)">
+          <div class="progress-info">
+            <span>Add ${{ getRemainingForFreeDelivery(cartTotal).toFixed(2) }} more for free delivery!</span>
+          </div>
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="(cartTotal / freeDeliveryThreshold) * 100"
+            ></div>
+          </div>
+        </div>
+        
+        <div class="free-delivery-badge" *ngIf="isEligibleForFreeDelivery(cartTotal)">
+          ✅ You qualify for free delivery!
+        </div>
+        
+        <!-- Price Breakdown -->
+        <div class="price-breakdown">
+          <div class="price-row">
+            <span>Subtotal</span>
+            <span>${{ getSubtotal(cartTotal).toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row">
+            <span>Delivery Fee</span>
+            <span *ngIf="getDeliveryFee(cartTotal) > 0">
+              ${{ getDeliveryFee(cartTotal).toFixed(2) }}
+            </span>
+            <span *ngIf="getDeliveryFee(cartTotal) === 0" class="free-text">
+              FREE
+            </span>
+          </div>
+          
+          <div class="price-row">
+            <span>Tax</span>
+            <span>${{ getTax(cartTotal).toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row total-row">
+            <span>Total</span>
+            <span>${{ getFinalTotal(cartTotal).toFixed(2) }}</span>
+          </div>
+        </div>
+        
+        <!-- Nutrition Summary -->
+        <div class="nutrition-summary" role="region" aria-label="Total Nutrition">
+          <h4>Total Nutrition</h4>
+          <div class="nutrition-stats">
+            <div class="nutrition-stat">
+              <span class="nutrition-label">Protein</span>
+              <span class="nutrition-value">
+                {{ getTotalProtein(cartItems) }}g
+              </span>
+            </div>
+            <div class="nutrition-stat">
+              <span class="nutrition-label">Calories</span>
+              <span class="nutrition-value">
+                {{ getTotalCalories(cartItems) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="cart-actions">
+          <a routerLink="/meals" class="btn btn-outline">
+            Continue Shopping
+          </a>
+          <a routerLink="/checkout" class="btn btn-primary">
+            Proceed to Checkout
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

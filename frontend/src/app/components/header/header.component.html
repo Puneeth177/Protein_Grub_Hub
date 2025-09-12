@@ -1,0 +1,53 @@
+<header class="header">
+  <div class="container">
+    <div class="nav-brand">
+      <a routerLink="/" class="logo">
+        <span class="logo-text">Protein Grub Hub</span>
+        <span class="logo-subtitle">PGH</span>
+      </a>
+    </div>
+
+  <button class="mobile-menu-toggle" [attr.aria-label]="'Toggle navigation menu'" aria-controls="nav-menu" [attr.aria-expanded]="isMenuOpen" (click)="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="nav-menu" id="nav-menu" [class.active]="isMenuOpen" [attr.aria-hidden]="!isMenuOpen">
+      <ul class="nav-list">
+        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
+        <li><a routerLink="/meals" routerLinkActive="active">Browse Meals</a></li>
+        <ng-container *ngIf="currentUser$ | async">
+          <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+        </ng-container>
+      </ul>
+    </nav>
+
+    <div class="nav-actions">
+      <ng-container *ngIf="currentUser$ | async as user; else loginButtons">
+        <a routerLink="/cart" class="cart-icon">
+          🛒
+          <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
+        </a>
+
+        <div class="user-menu">
+          <button class="user-button" (click)="toggleMenu()">
+            <span class="user-name">{{ user.name || user.email }}</span>
+            <span>▼</span>
+          </button>
+          <div class="dropdown-menu" [class.show]="isMenuOpen">
+            <a routerLink="/profile" (click)="toggleMenu()">Profile</a>
+            <a routerLink="/orders" (click)="toggleMenu()">My Orders</a>
+            <button (click)="logout()">Logout</button>
+          </div>
+        </div>
+      </ng-container>
+      
+      <ng-template #loginButtons>
+        <div class="auth-buttons">
+          <a routerLink="/login" class="login-btn">Login</a>
+          <a routerLink="/register" class="signup-btn">Sign Up</a>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</header>

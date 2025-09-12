@@ -1,0 +1,203 @@
+<div class="meals-container reveal" role="main" aria-label="Browse Meals">
+  <div class="meals-header">
+    <h1 id="meals-title">Browse Meals</h1>
+    <p>Discover protein-rich meals tailored to your fitness goals</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section reveal" role="region" aria-label="Meal Filters">
+    <div class="filters-header">
+      <h3>Filters</h3>
+      <button 
+        class="btn btn-outline btn-sm" 
+        (click)="clearFilters()"
+        *ngIf="getFilterCount() > 0"
+      >
+        Clear All ({{ getFilterCount() }})
+      </button>
+    </div>
+
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-group">
+        <label for="search-meals">Search</label>
+        <input
+          id="search-meals"
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          placeholder="Search meals..."
+          class="filter-input"
+          [attr.aria-label]="'Search meals'"
+        />
+      </div>
+
+      <!-- Category -->
+      <div class="filter-group">
+        <label for="category-select">Category</label>
+        <select 
+          id="category-select"
+          [(ngModel)]="selectedCategory" 
+          (change)="applyFilters()"
+          class="filter-select"
+          [attr.aria-label]="'Filter by category'"
+        >
+          <option *ngFor="let category of categories" [value]="category.id">
+            {{ category.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Protein Range -->
+      <div class="filter-group">
+  <label>Protein Range (g)</label>
+        <div class="range-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minProtein"
+            (input)="applyFilters()"
+            placeholder="Min"
+            class="range-input"
+          />
+          <span>to</span>
+          <input
+            type="number"
+            [(ngModel)]="maxProtein"
+            (input)="applyFilters()"
+            placeholder="Max"
+            class="range-input"
+          />
+        </div>
+      </div>
+
+      <!-- Price Range -->
+      <div class="filter-group">
+  <label>Price Range ($)</label>
+        <div class="range-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            (input)="applyFilters()"
+            placeholder="Min"
+            class="range-input"
+          />
+          <span>to</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            (input)="applyFilters()"
+            placeholder="Max"
+            class="range-input"
+          />
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-group">
+        <label for="sort-select">Sort By</label>
+        <select 
+          id="sort-select"
+          [(ngModel)]="sortBy" 
+          (change)="applyFilters()"
+          class="filter-select"
+          [attr.aria-label]="'Sort meals'"
+        >
+          <option *ngFor="let option of sortOptions" [value]="option.id">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dietary Preferences -->
+    <div class="dietary-filters">
+      <label>Dietary Preferences</label>
+      <div class="dietary-tags" role="group" aria-label="Dietary Preferences">
+        <button
+          *ngFor="let diet of dietaryOptions"
+          class="dietary-tag"
+          [class.selected]="selectedDietary.includes(diet.id)"
+          (click)="toggleDietaryFilter(diet.id)"
+          [attr.aria-pressed]="selectedDietary.includes(diet.id)"
+        >
+          {{ diet.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-section reveal" role="region" aria-label="Meal Results">
+    <div class="results-header">
+      <h3 id="meals-results">{{ filteredMeals.length }} meals found</h3>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" *ngIf="isLoading" role="status" aria-live="polite">
+      <p>Loading meals...</p>
+    </div>
+
+    <!-- Meals Grid -->
+    <div class="meals-grid" *ngIf="!isLoading && filteredMeals.length > 0" role="list" aria-labelledby="meals-results">
+      <div class="meal-card reveal" *ngFor="let meal of filteredMeals" role="listitem">
+        <div class="meal-image">
+          <img [src]="meal.image_url" [alt]="'Meal: ' + meal.name + '. ' + (meal.description || '')" />
+          <div class="protein-badge">{{ meal.protein_grams }}g protein</div>
+        </div>
+        
+        <div class="meal-content">
+          <h4 class="meal-name">{{ meal.name }}</h4>
+          <p class="meal-description">{{ meal.description }}</p>
+          
+          <div class="meal-tags" *ngIf="meal.dietary_tags.length > 0">
+            <span 
+              class="tag" 
+              *ngFor="let tag of meal.dietary_tags.slice(0, 3)"
+            >
+              {{ tag }}
+            </span>
+          </div>
+          
+          <div class="meal-stats">
+            <div class="stat">
+              <span class="stat-label">Calories</span>
+              <span class="stat-value">{{ meal.calories }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Protein</span>
+              <span class="stat-value">{{ meal.protein_grams }}g</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Price</span>
+              <span class="stat-value">${{ meal.price }}</span>
+            </div>
+          </div>
+          
+          <div class="meal-actions">
+            <a [routerLink]="['/meals', meal._id]" class="btn btn-outline" [attr.aria-label]="'View details for ' + meal.name">
+              View Details
+            </a>
+            <button 
+              class="btn btn-primary"
+              (click)="addToCart(meal)"
+              [attr.aria-label]="'Add ' + meal.name + ' to cart'"
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="!isLoading && filteredMeals.length === 0" role="alert" aria-live="polite">
+      <div class="no-results-content">
+        <h3>No meals found</h3>
+        <p>Try adjusting your filters to see more results.</p>
+        <button class="btn btn-primary" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,78 @@
+
+<div class="login-container reveal" role="main" aria-label="Login">
+  <div class="login-card reveal">
+    <div class="login-header">
+      <h1 id="login-title">Welcome Back</h1>
+      <p>Sign in to your Protein Grub Hub account</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="login-form" aria-labelledby="login-title">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="Enter your email"
+          required
+          aria-required="true"
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-input">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+            aria-required="true"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            aria-label="Toggle password visibility"
+          >
+            {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+          </button>
+        </div>
+      </div>
+
+
+      <div class="error-message" *ngIf="errorMessage" role="alert" aria-live="assertive">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-full"
+        [disabled]="isLoading"
+        aria-label="Sign In"
+      >
+        {{ isLoading ? 'Signing In...' : 'Sign In' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-full"
+        (click)="demoLogin()"
+        [disabled]="isLoading"
+        aria-label="Demo Login"
+      >
+        Demo Login
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Don't have an account? <a routerLink="/register">Sign up here</a></p>
+      <p><a routerLink="/">← Back to Home</a></p>
+    </div>
+  </div>
+</div>

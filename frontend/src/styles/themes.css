@@ -1,0 +1,631 @@
+/* CSS Custom Properties for Theme System (New Relic inspired) */
+:root {
+  /* Light Mode Tokens */
+  --color-primary: #00e7a7;        /* Neon green */
+  --color-primary-dark: #00b686;   /* Deeper green for hover */
+  --color-primary-light: #5affc7;  /* Lighter green */
+  --color-secondary: #00c2ff;      /* Cyan */
+  --color-accent: #7c4dff;         /* Purple accent used sparsely */
+  --color-background: #ffffff;     /* White */
+  --color-surface: #f7fbff;        /* Very light blue surface */
+  --surface-elevated: rgba(255, 255, 255, 0.65); /* Glass surface for light */
+  --app-background: radial-gradient(1200px 600px at 10% 0%, #E9FBFF 0%, #F5FFFD 30%, #F7FAFF 100%);
+  --color-text: #0b2239;           /* Deep navy text */
+  --color-text-secondary: #2b4b63; /* Muted slate */
+  --color-border: #d9e7ef;         /* Pale blue border */
+  --color-success: #00e7a7;
+  --color-warning: #ffa646;
+  --color-error: #ff5a52;
+
+  /* Gradients */
+  --gradient-primary: radial-gradient(1000px 500px at 10% 0%, rgba(0, 231, 167, 0.25) 0%, rgba(0, 194, 255, 0.15) 40%, transparent 70%), linear-gradient(135deg, #0f1e2e 0%, #0b2239 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary-light) 100%);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Typography */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Body and base styles */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all text is highly visible */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Theme-aware component styles */
+/* Light theme button styles */
+:not(.dark-theme) .btn-primary,
+:not(.dark-theme) button:not(.btn-outline) {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border: 2px solid var(--color-primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+:not(.dark-theme) .btn-primary:hover,
+:not(.dark-theme) button:not(.btn-outline):hover {
+  background: var(--color-primary-dark) !important;
+  border-color: var(--color-primary-dark) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+:not(.dark-theme) .btn-outline {
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  border: 2px solid var(--color-primary) !important;
+}
+
+:not(.dark-theme) .btn-outline:hover {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Dark theme button styles */
+.dark-theme .btn-primary,
+.dark-theme button:not(.btn-outline) {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border: 2px solid var(--color-primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.dark-theme .btn-primary:hover,
+.dark-theme button:not(.btn-outline):hover {
+  background: var(--color-primary-dark) !important;
+  border-color: var(--color-primary-dark) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.dark-theme .btn-outline {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  border: 2px solid var(--color-text) !important;
+}
+
+.dark-theme .btn-outline:hover {
+  background: var(--color-text) !important;
+  color: var(--color-surface) !important;
+}
+
+.btn-secondary {
+  background: var(--color-secondary) !important;
+  color: white !important;
+  border: 2px solid var(--color-secondary) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Form controls */
+.form-control:focus,
+.filter-input:focus,
+.filter-select:focus,
+.range-input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.1) !important;
+}
+
+/* Cards and surfaces */
+.card,
+.profile-card,
+.order-card,
+.meal-card,
+.filters-section {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Meal card specific styles */
+.meal-card {
+  overflow: hidden !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.meal-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.meal-card .meal-title,
+.meal-card h3,
+.meal-card .title {
+  color: var(--color-text) !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.meal-card .meal-description,
+.meal-card p,
+.meal-card .description {
+  color: var(--color-text) !important;
+  margin-bottom: 1rem !important;
+}
+
+.meal-card .meal-stats,
+.meal-card .stats,
+.meal-card .details {
+  display: flex !important;
+  gap: 0.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.meal-card .view-details,
+.meal-card .details-button,
+.meal-card .action-button {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.meal-card .view-details:hover,
+.meal-card .details-button:hover,
+.meal-card .action-button:hover {
+  background-color: var(--color-primary-dark) !important;
+}
+
+/* Text colors */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-success {
+  color: var(--color-success) !important;
+}
+
+.text-warning {
+  color: var(--color-warning) !important;
+}
+
+.text-error {
+  color: var(--color-error) !important;
+}
+
+/* Status badges */
+.status-badge {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+.badge-success {
+  background: var(--color-success) !important;
+}
+
+.badge-warning {
+  background: var(--color-warning) !important;
+}
+
+.badge-error {
+  background: var(--color-error) !important;
+}
+
+/* Progress indicators */
+.progress-bar {
+  background: var(--color-primary) !important;
+}
+
+.progress-background {
+  background: var(--color-border) !important;
+}
+
+/* Links */
+/* Light theme links */
+:not(.dark-theme) a {
+  color: var(--color-primary-dark) !important;
+  text-decoration: none !important;
+  transition: color var(--transition-fast), text-decoration var(--transition-fast);
+}
+
+:not(.dark-theme) a:hover {
+  color: var(--color-primary) !important;
+  text-decoration: underline !important;
+}
+
+/* Dark theme links */
+.dark-theme a {
+  color: var(--color-text) !important;
+  text-decoration: none !important;
+  transition: color var(--transition-fast), text-decoration var(--transition-fast);
+}
+
+.dark-theme a:hover {
+  color: var(--color-primary-light) !important;
+  text-decoration: underline !important;
+}
+
+/* Headers and navigation */
+.header {
+  background: var(--gradient-primary) !important;
+}
+
+/* Dietary tags */
+.dietary-tag.active {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Meal stats and badges */
+.stat-protein,
+.protein-badge,
+[class*="protein"],
+.meal-protein,
+.protein-value {
+  color: #ffffff !important;
+  background-color: var(--color-primary) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+}
+
+.stat-calories,
+.calorie-badge,
+[class*="cal"],
+.meal-calories,
+.calorie-value {
+  color: #ffffff !important;
+  background-color: var(--color-accent) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+}
+
+.price-badge,
+[class*="price"],
+.meal-price,
+.price-value {
+  color: #ffffff !important;
+  background-color: var(--color-primary-dark) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  border-top-color: var(--color-primary) !important;
+}
+
+/* Dark theme specific styles */
+.dark-theme {
+  /* Dark theme colors */
+  --color-background: #081321;     /* Deep ink */
+  --color-surface: #0f2133;        /* Card surface */
+  --color-text: #ffffff;           /* White text */
+  --color-text-secondary: #c6d4e0; /* Muted slate */
+  --color-border: #14324a;         /* Subtle border */
+  --color-primary: #00e7a7;        /* Neon green */
+  --color-primary-dark: #00b686;   /* Deeper green */
+  --color-primary-light: #5affc7;  /* Lighter green */
+
+  /* Enhanced shadows for dark themes */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+/* Dark theme adjustments for specific elements */
+.dark-theme .card,
+.dark-theme .profile-card,
+.dark-theme .order-card,
+.dark-theme .meal-card,
+.dark-theme .filters-section {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* How It Works section specific styles */
+.how-it-works {
+  padding: 4rem 0;
+  background: linear-gradient(to bottom, var(--color-background), var(--color-surface)) !important;
+  border-top: 2px solid var(--color-border) !important;
+  border-bottom: 2px solid var(--color-border) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.how-it-works h2 {
+  font-size: var(--font-size-2xl) !important;
+  margin-bottom: 3rem !important;
+  text-align: center !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  font-weight: 800 !important;
+  position: relative !important;
+  display: inline-block !important;
+  padding: 0.5rem 2rem !important;
+  color: var(--color-text) !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.how-it-works .section-content {
+  color: var(--color-text) !important;
+  font-size: var(--font-size-lg) !important;
+  line-height: 2 !important;
+  max-width: 800px !important;
+  margin: 0 auto !important;
+  padding: 0 var(--spacing-xl) !important;
+  text-align: center !important;
+}
+
+.how-it-works .section-content p {
+  margin-bottom: var(--spacing-lg) !important;
+  font-size: calc(var(--font-size-lg) + 2px) !important;
+  color: var(--color-text) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.how-it-works .step {
+  background: var(--color-surface) !important;
+  padding: var(--spacing-xl) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  margin-bottom: var(--spacing-xl) !important;
+  border: 2px solid var(--color-primary) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: var(--color-text) !important;
+}
+
+.how-it-works .step h3 {
+  color: var(--color-primary) !important;
+  font-size: var(--font-size-xl) !important;
+  margin-bottom: var(--spacing-md) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  position: relative !important;
+  z-index: 2 !important;
+  padding: var(--spacing-md) var(--spacing-lg) !important;
+}
+
+.how-it-works .step p {
+  position: relative !important;
+  z-index: 2 !important;
+  padding: var(--spacing-lg) !important;
+  margin-top: var(--spacing-lg) !important;
+  color: var(--color-text) !important;
+  font-size: var(--font-size-lg) !important;
+  line-height: 1.8 !important;
+}
+
+/* Dark theme specific adjustments for How It Works */
+.dark-theme .how-it-works .step {
+  background: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.dark-theme .how-it-works .step h3 {
+  color: var(--color-primary-light) !important;
+}
+
+.how-it-works .step img {
+  width: 64px !important;
+  height: 64px !important;
+  margin-bottom: var(--spacing-md) !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.how-it-works .step .icon-container {
+  background: rgba(255, 255, 255, 0.1) !important;
+  padding: var(--spacing-md) !important;
+  border-radius: 50% !important;
+  margin-bottom: var(--spacing-md) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  z-index: 2 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-theme .form-control,
+.dark-theme .filter-input,
+.dark-theme .filter-select,
+.dark-theme .range-input {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+.dark-theme .form-control::placeholder,
+.dark-theme .filter-input::placeholder {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Dark theme dropdown and modal adjustments */
+.dark-theme .dropdown-menu,
+.dark-theme .user-menu .dropdown-menu {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.dark-theme .dropdown-menu a,
+.dark-theme .user-menu .dropdown-menu a {
+  color: var(--color-text) !important;
+}
+
+.dark-theme .dropdown-menu a:hover,
+.dark-theme .user-menu .dropdown-menu a:hover {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Ensure entire page background is covered */
+html.dark-theme,
+html.dark-theme body,
+.dark-theme {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+/* Force all containers and content areas to use appropriate background and text colors */
+.container,
+.content-area,
+.page-wrapper,
+.main-content,
+section,
+.hero-section,
+.features-section,
+.how-it-works,
+.testimonials,
+footer {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+/* Light theme text colors */
+:not(.dark-theme) h1,
+:not(.dark-theme) h2,
+:not(.dark-theme) h3,
+:not(.dark-theme) h4,
+:not(.dark-theme) h5,
+:not(.dark-theme) h6,
+:not(.dark-theme) p,
+:not(.dark-theme) span,
+:not(.dark-theme) div,
+:not(.dark-theme) label {
+  color: var(--color-text) !important;
+}
+
+/* Dark theme text colors */
+.dark-theme .container,
+.dark-theme .content-area,
+.dark-theme .page-wrapper,
+.dark-theme .main-content,
+.dark-theme section,
+.dark-theme .hero-section,
+.dark-theme .features-section,
+.dark-theme .how-it-works,
+.dark-theme .testimonials,
+.dark-theme footer {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+/* Ensure home buttons and navigation are visible in both themes */
+.nav-link,
+.home-button,
+.navigation-item,
+.nav-item a,
+.navbar-nav a,
+a.nav-link,
+.navbar a,
+header a,
+.header a,
+.nav a,
+.nav-container a,
+.navigation a {
+  color: #ffffff !important; /* White text for all navigation in both themes */
+  transition: color var(--transition-normal);
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Light theme navigation hover */
+:not(.dark-theme) .nav-link:hover,
+:not(.dark-theme) .home-button:hover,
+:not(.dark-theme) .navigation-item:hover,
+:not(.dark-theme) .nav-item a:hover,
+:not(.dark-theme) .navbar-nav a:hover,
+:not(.dark-theme) a.nav-link:hover,
+:not(.dark-theme) .navbar a:hover,
+:not(.dark-theme) header a:hover,
+:not(.dark-theme) .header a:hover,
+:not(.dark-theme) .nav a:hover,
+:not(.dark-theme) .nav-container a:hover,
+:not(.dark-theme) .navigation a:hover {
+  color: #f0f0f0 !important;
+  text-decoration: underline !important;
+}
+
+/* Dark theme navigation hover */
+.dark-theme .nav-link:hover,
+.dark-theme .home-button:hover,
+.dark-theme .navigation-item:hover,
+.dark-theme .nav-item a:hover,
+.dark-theme .navbar-nav a:hover,
+.dark-theme a.nav-link:hover,
+.dark-theme .navbar a:hover,
+.dark-theme header a:hover,
+.dark-theme .header a:hover,
+.dark-theme .nav a:hover,
+.dark-theme .nav-container a:hover,
+.dark-theme .navigation a:hover {
+  color: var(--color-primary-light) !important;
+  text-decoration: underline !important;
+}
+
+/* Header/navbar specific styles */
+.header,
+.navbar,
+.nav-container,
+header,
+.nav,
+.navigation {
+  background: var(--gradient-primary) !important;
+  padding: 1rem !important;
+}
+
+/* Theme transition for all elements */
+* {
+  transition: background-color var(--transition-normal), 
+              color var(--transition-normal), 
+              border-color var(--transition-normal);
+}

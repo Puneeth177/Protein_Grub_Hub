@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Protein Grub Hub</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="assets/js/theme-toggle.js"></script>
+</head>
+<body>
+  <app-root></app-root>
+  
+  <script>
+    (function(){
+      const onIntersect = (entries, io) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('revealed');
+            io.unobserve(e.target);
+          }
+        });
+      };
+      const io = new IntersectionObserver(onIntersect, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+
+      const watchAll = () => {
+        document.querySelectorAll('.reveal').forEach(el => {
+          if (!el.dataset.revealObserved) {
+            io.observe(el);
+            el.dataset.revealObserved = '1';
+          }
+        });
+      };
+
+      // Initial scan
+      watchAll();
+
+      // Observe for Angular-driven DOM changes
+      const mo = new MutationObserver(() => watchAll());
+      mo.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+  
+</body>
+</html>

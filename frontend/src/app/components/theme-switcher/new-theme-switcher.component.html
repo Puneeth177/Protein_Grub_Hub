@@ -1,0 +1,10 @@
+<div class="theme-switcher">
+  <select 
+    class="theme-select"
+    [value]="currentTheme.id"
+    (change)="selectTheme($event.target.value)"
+  >
+    <option value="forest-green">Forest Green (Light)</option>
+    <option value="dark-forest">Dark Forest</option>
+  </select>
+</div>

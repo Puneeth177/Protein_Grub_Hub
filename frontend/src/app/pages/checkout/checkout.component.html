@@ -1,0 +1,124 @@
+<div class="checkout-container reveal">
+  <div class="checkout-header">
+    <h1>Checkout</h1>
+    <p>Complete your order and get your protein-rich meals delivered</p>
+  </div>
+
+  <div class="checkout-content" *ngIf="!loading && !error">
+    <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()" class="checkout-form">
+      <!-- Delivery Address -->
+      <div class="form-section">
+        <h2>Delivery Address</h2>
+        <div formGroupName="deliveryAddress">
+          <div class="form-group">
+            <label for="street">Street Address*</label>
+            <input id="street" type="text" formControlName="street">
+            <div class="error" *ngIf="addressErrors.street">{{ addressErrors.street }}</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City*</label>
+              <input id="city" type="text" formControlName="city">
+              <div class="error" *ngIf="addressErrors.city">{{ addressErrors.city }}</div>
+            </div>
+
+            <div class="form-group">
+              <label for="state">State*</label>
+              <input id="state" type="text" formControlName="state">
+              <div class="error" *ngIf="addressErrors.state">{{ addressErrors.state }}</div>
+            </div>
+
+            <div class="form-group">
+              <label for="zip_code">ZIP Code*</label>
+              <input id="zip_code" type="text" formControlName="zip_code">
+              <div class="error" *ngIf="addressErrors.zip_code">{{ addressErrors.zip_code }}</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number*</label>
+            <input id="phone" type="tel" formControlName="phone">
+            <div class="error" *ngIf="addressErrors.phone">{{ addressErrors.phone }}</div>
+          </div>
+
+          <div class="form-group">
+            <label for="delivery_instructions">Delivery Instructions</label>
+            <textarea id="delivery_instructions" formControlName="delivery_instructions"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-section">
+        <h2>Payment Method</h2>
+        <div class="form-group">
+          <div class="payment-options">
+            <label>
+              <input type="radio" formControlName="paymentMethod" value="card">
+              Credit/Debit Card
+            </label>
+            <label>
+              <input type="radio" formControlName="paymentMethod" value="cash">
+              Cash on Delivery
+            </label>
+          </div>
+          <div class="error" *ngIf="paymentError">{{ paymentError }}</div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="form-section">
+        <h2>Order Summary</h2>
+        <div class="order-summary">
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span>{{ subtotal | currency }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax ({{ (taxRate * 100) | number:'1.0-0' }}%):</span>
+            <span>{{ tax | currency }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Delivery Fee:</span>
+            <span>{{ deliveryFee | currency }}</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total:</span>
+            <span>{{ total | currency }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" routerLink="/cart">Back to Cart</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!checkoutForm.valid || loading">
+          {{ loading ? 'Processing...' : 'Place Order' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Processing your order...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error">
+    <h2>Oops! Something went wrong</h2>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="retrySubmit()">Try Again</button>
+    <button class="btn btn-outline" routerLink="/cart">Back to Cart</button>
+  </div>
+
+  <!-- Success State -->
+  <div class="success-state" *ngIf="orderComplete">
+    <h2>Order Placed Successfully!</h2>
+    <p>Your order #{{ orderId }} has been confirmed.</p>
+    <p>You will receive an email confirmation shortly.</p>
+    <button class="btn btn-primary" routerLink="/orders">View Order Status</button>
+    <button class="btn btn-outline" routerLink="/meals">Continue Shopping</button>
+  </div>
+</div>

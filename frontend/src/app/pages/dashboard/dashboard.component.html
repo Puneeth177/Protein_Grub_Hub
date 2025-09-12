@@ -1,0 +1,178 @@
+<div class="dashboard-container reveal">
+  <div class="dashboard-header">
+    <h1>Welcome back, {{ currentUser.name || 'User' }}!</h1>
+    <p>Track your protein intake and stay on top of your fitness goals.</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Protein Tracker Card -->
+    <div class="card protein-tracker reveal">
+      <h2>Today's Protein Intake</h2>
+      
+      <div class="protein-circle">
+        <div class="circle-progress">
+          <svg viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="#e1e5e9"
+              stroke-width="8"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              [attr.stroke]="getProgressColor()"
+              stroke-width="8"
+              stroke-linecap="round"
+              [style.stroke-dasharray]="283"
+              [style.stroke-dashoffset]="283 - (283 * getProteinPercentage() / 100)"
+              transform="rotate(-90 50 50)"
+            />
+          </svg>
+          <div class="circle-content">
+            <div class="current-protein">{{ currentProtein }}g</div>
+            <div class="protein-goal">of {{ proteinGoal }}g</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="protein-stats">
+        <div class="stat">
+          <span class="stat-label">Remaining</span>
+          <span class="stat-value">{{ getRemainingProtein() }}g</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Progress</span>
+          <span class="stat-value">{{ getProteinPercentage().toFixed(0) }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Add Protein -->
+    <div class="card quick-add reveal">
+      <h3>Quick Add Protein</h3>
+      <p>Log protein from snacks, supplements, or other sources</p>
+      
+      <div class="quick-add-form">
+        <input
+          type="number"
+          [(ngModel)]="quickProteinAmount"
+          placeholder="Enter protein amount (g)"
+          class="protein-input"
+        />
+        <button 
+          class="btn btn-primary"
+          (click)="addQuickProtein()"
+          [disabled]="!quickProteinAmount"
+        >
+          Add Protein
+        </button>
+      </div>
+    </div>
+
+    <!-- Recommended Meals -->
+    <div class="card recommended-meals reveal">
+      <h3>Recommended for You</h3>
+      <p>Based on your remaining protein needs</p>
+      
+      <div class="meals-list" *ngIf="recommendedMeals.length > 0">
+        <div class="meal-item" *ngFor="let meal of recommendedMeals">
+          <img [src]="meal.image_url" [alt]="meal.name" class="meal-image" />
+          <div class="meal-info">
+            <h4>{{ meal.name }}</h4>
+            <div class="meal-stats">
+              <span>{{ meal.protein_grams }}g protein</span>
+              <span>${{ meal.price }}</span>
+            </div>
+          </div>
+          <a [routerLink]="['/meals', meal._id]" class="btn btn-outline btn-sm">View</a>
+        </div>
+      </div>
+      
+      <div class="no-meals" *ngIf="recommendedMeals.length === 0">
+        <p>Great job! You've reached your protein goal for today! 🎉</p>
+      </div>
+    </div>
+
+    <!-- Weekly Progress Chart -->
+    <div class="card weekly-progress reveal">
+      <h3>Weekly Progress</h3>
+      <p>Your protein intake over the last 7 days</p>
+      
+      <div class="chart-container">
+        <div class="chart">
+          <div 
+            class="bar" 
+            *ngFor="let data of weeklyData"
+            [style.height.%]="(data.protein / getMaxWeeklyProtein()) * 100"
+          >
+            <div class="bar-value">{{ data.protein }}g</div>
+          </div>
+        </div>
+        <div class="chart-labels">
+          <span *ngFor="let data of weeklyData">{{ data.day }}</span>
+        </div>
+      </div>
+      
+      <div class="weekly-stats">
+        <div class="stat">
+          <span class="stat-label">Weekly Average</span>
+          <span class="stat-value">{{ getWeeklyAverage() }}g</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Goal Achievement</span>
+          <span class="stat-value">{{ ((getWeeklyAverage() / proteinGoal) * 100).toFixed(0) }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health App Integration -->
+    <div class="card health-integration reveal">
+      <h3>Health App Integration</h3>
+      <p>Connect with your favorite fitness apps</p>
+      
+      <div class="integration-status">
+        <div class="app-status">
+          <span class="app-icon">📱</span>
+          <span class="app-name">Google Fit</span>
+          <span class="status-badge disconnected">Not Connected</span>
+        </div>
+        <div class="app-status">
+          <span class="app-icon">⌚</span>
+          <span class="app-name">Apple Health</span>
+          <span class="status-badge disconnected">Not Connected</span>
+        </div>
+      </div>
+      
+      <button class="btn btn-outline">Connect Apps</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card quick-actions reveal">
+      <h3>Quick Actions</h3>
+      
+      <div class="action-buttons">
+        <a routerLink="/meals" class="action-btn">
+          <span class="action-icon">🍽️</span>
+          <span class="action-label">Browse Meals</span>
+        </a>
+        <a routerLink="/cart" class="action-btn">
+          <span class="action-icon">🛒</span>
+          <span class="action-label">View Cart</span>
+        </a>
+        <a routerLink="/orders" class="action-btn">
+          <span class="action-icon">📦</span>
+          <span class="action-label">My Orders</span>
+        </a>
+        <a routerLink="/profile" class="action-btn">
+          <span class="action-icon">👤</span>
+          <span class="action-label">Profile</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

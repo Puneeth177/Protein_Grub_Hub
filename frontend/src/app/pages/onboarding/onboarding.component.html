@@ -1,0 +1,149 @@
+<div class="onboarding-container">
+  <div class="onboarding-card">
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+    </div>
+    
+    <div class="step-indicator">
+      Step {{ currentStep }} of {{ totalSteps }}
+    </div>
+
+    <!-- Step 1: Fitness Goals -->
+    <div class="step-content" *ngIf="currentStep === 1">
+      <h2>What's your primary fitness goal?</h2>
+      <p>This helps us recommend the right meals for your journey.</p>
+      
+      <div class="options-grid">
+        <div 
+          class="option-card" 
+          *ngFor="let goal of fitnessGoals"
+          [class.selected]="fitnessGoal === goal.id"
+          (click)="selectFitnessGoal(goal.id)"
+        >
+          <div class="option-icon">{{ goal.icon }}</div>
+          <div class="option-label">{{ goal.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Dietary Preferences -->
+    <div class="step-content" *ngIf="currentStep === 2">
+      <h2>Any dietary preferences?</h2>
+      <p>Select all that apply to personalize your meal recommendations.</p>
+      
+      <div class="options-grid">
+        <div 
+          class="option-card" 
+          *ngFor="let diet of dietaryOptions"
+          [class.selected]="dietaryPreferences.includes(diet.id)"
+          (click)="toggleDietaryPreference(diet.id)"
+        >
+          <div class="option-icon">{{ diet.icon }}</div>
+          <div class="option-label">{{ diet.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Health Information -->
+    <div class="step-content" *ngIf="currentStep === 3">
+      <h2>Tell us about yourself</h2>
+      <p>This information helps us calculate your optimal protein intake.</p>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input
+            type="number"
+            id="age"
+            [(ngModel)]="healthInfo.age"
+            placeholder="25"
+            min="13"
+            max="100"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="weight">Weight (kg)</label>
+          <input
+            type="number"
+            id="weight"
+            [(ngModel)]="healthInfo.weight"
+            placeholder="70"
+            min="30"
+            max="300"
+            (input)="calculateProteinGoal()"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="height">Height (cm)</label>
+          <input
+            type="number"
+            id="height"
+            [(ngModel)]="healthInfo.height"
+            placeholder="175"
+            min="100"
+            max="250"
+          />
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="activity">Activity Level</label>
+        <select 
+          id="activity" 
+          [(ngModel)]="healthInfo.activityLevel"
+          (change)="calculateProteinGoal()"
+        >
+          <option value="">Select your activity level</option>
+          <option 
+            *ngFor="let level of activityLevels" 
+            [value]="level.id"
+          >
+            {{ level.label }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="protein-goal" *ngIf="healthInfo.proteinGoal > 0">
+        <div class="goal-card">
+          <h3>Your Daily Protein Goal</h3>
+          <div class="goal-amount">{{ healthInfo.proteinGoal }}g</div>
+          <p>Based on your goals and activity level</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="navigation-buttons">
+      <button 
+        class="btn btn-secondary" 
+        (click)="prevStep()"
+        *ngIf="currentStep > 1"
+      >
+        Previous
+      </button>
+      
+      <button 
+        class="btn btn-primary" 
+        (click)="nextStep()"
+        *ngIf="currentStep < totalSteps"
+        [disabled]="(currentStep === 1 && !canProceedStep1()) || 
+                   (currentStep === 2 && !canProceedStep2()) || 
+                   (currentStep === 3 && !canProceedStep3())"
+      >
+        Next
+      </button>
+      
+      <button 
+        class="btn btn-primary" 
+        (click)="completeOnboarding()"
+        *ngIf="currentStep === totalSteps"
+        [disabled]="!canProceedStep3()"
+      >
+        Complete Setup
+      </button>
+    </div>
+  </div>
+</div>

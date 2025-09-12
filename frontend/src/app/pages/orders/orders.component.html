@@ -1,0 +1,233 @@
+<div class="orders-container">
+  <div class="orders-header">
+    <h1>My Orders</h1>
+    <p>Track your order history and delivery status</p>
+  </div>
+
+  <!-- Not logged in state -->
+  <div class="not-logged-in" *ngIf="!currentUser">
+    <div class="not-logged-in-content">
+      <div class="icon">🔒</div>
+      <h2>Please Log In</h2>
+      <p>You need to be logged in to view your orders.</p>
+      <a routerLink="/login" class="btn btn-primary">Go to Login</a>
+    </div>
+  </div>
+
+  <!-- Orders content -->
+  <div class="orders-content" *ngIf="currentUser">
+    <!-- Filter Controls -->
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label for="statusFilter">Filter by Status:</label>
+        <select id="statusFilter" [(ngModel)]="filterStatus" class="filter-select">
+          <option value="all">All Orders</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="preparing">Preparing</option>
+          <option value="out-for-delivery">Out for Delivery</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" *ngIf="isLoading">
+      <div class="loading-spinner"></div>
+      <p>Loading your orders...</p>
+    </div>
+
+    <!-- Orders List -->
+    <div class="orders-list" *ngIf="!isLoading">
+      <!-- Empty State -->
+      <div class="empty-orders" *ngIf="getFilteredOrders().length === 0">
+        <div class="empty-orders-content">
+          <div class="empty-icon">📦</div>
+          <h2>No Orders Found</h2>
+          <p *ngIf="filterStatus === 'all'">You haven't placed any orders yet.</p>
+          <p *ngIf="filterStatus !== 'all'">No orders found with status "{{ getStatusText(filterStatus) }}".</p>
+          <a routerLink="/meals" class="btn btn-primary">Browse Meals</a>
+        </div>
+      </div>
+
+      <!-- Order Cards -->
+      <div class="order-card" *ngFor="let order of getFilteredOrders()">
+        <div class="order-header">
+          <div class="order-info">
+            <h3>{{ order.orderNumber }}</h3>
+            <p class="order-date">{{ formatDate(order.date) }}</p>
+          </div>
+          <div class="order-status">
+            <span 
+              class="status-badge" 
+              [style.background-color]="getStatusColor(order.status)"
+            >
+              {{ getStatusText(order.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-content">
+          <div class="order-items">
+            <div class="item-preview" *ngFor="let item of order.items.slice(0, 2)">
+              <img [src]="item.meal.image_url" [alt]="item.meal.name" class="item-image">
+              <div class="item-details">
+                <span class="item-name">{{ item.meal.name }}</span>
+                <span class="item-quantity">Qty: {{ item.quantity }}</span>
+              </div>
+            </div>
+            <div class="more-items" *ngIf="order.items.length > 2">
+              +{{ order.items.length - 2 }} more items
+            </div>
+          </div>
+
+          <div class="order-summary">
+            <div class="summary-row">
+              <span>Total Protein:</span>
+              <span>{{ getTotalProtein(order) }}g</span>
+            </div>
+            <div class="summary-row">
+              <span>Total Calories:</span>
+              <span>{{ getTotalCalories(order) }}</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total Amount:</span>
+              <span>${{ order.total.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-actions">
+          <button class="btn btn-outline btn-sm" (click)="viewOrderDetails(order)">
+            View Details
+          </button>
+          <button 
+            class="btn btn-outline btn-sm" 
+            (click)="trackOrder(order)"
+            *ngIf="order.status !== 'delivered' && order.status !== 'cancelled'"
+          >
+            Track Order
+          </button>
+          <button class="btn btn-primary btn-sm" (click)="reorderItems(order)">
+            Reorder
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" *ngIf="selectedOrder" (click)="closeOrderDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Order Details</h2>
+        <button class="close-btn" (click)="closeOrderDetails()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="order-details">
+          <div class="details-section">
+            <h3>Order Information</h3>
+            <div class="details-grid">
+              <div class="detail-item">
+                <label>Order Number:</label>
+                <span>{{ selectedOrder.orderNumber }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Order Date:</label>
+                <span>{{ formatDate(selectedOrder.date) }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Status:</label>
+                <span 
+                  class="status-badge" 
+                  [style.background-color]="getStatusColor(selectedOrder.status)"
+                >
+                  {{ getStatusText(selectedOrder.status) }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <label>Delivery Address:</label>
+                <span>{{ selectedOrder.deliveryAddress }}</span>
+              </div>
+              <div class="detail-item" *ngIf="selectedOrder.estimatedDelivery">
+                <label>Estimated Delivery:</label>
+                <span>{{ formatDate(selectedOrder.estimatedDelivery) }}</span>
+              </div>
+              <div class="detail-item" *ngIf="selectedOrder.actualDelivery">
+                <label>Actual Delivery:</label>
+                <span>{{ formatDate(selectedOrder.actualDelivery) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3>Order Items</h3>
+            <div class="items-list">
+              <div class="item-detail" *ngFor="let item of selectedOrder.items">
+                <img [src]="item.meal.image_url" [alt]="item.meal.name" class="item-image">
+                <div class="item-info">
+                  <h4>{{ item.meal.name }}</h4>
+                  <div class="item-stats">
+                    <span>{{ item.meal.protein_grams }}g protein</span>
+                    <span>{{ item.meal.calories }} cal</span>
+                    <span>Qty: {{ item.quantity }}</span>
+                  </div>
+                </div>
+                <div class="item-price">
+                  <span class="unit-price">${{ item.meal.price }} each</span>
+                  <span class="total-price">${{ (item.meal.price * item.quantity).toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3>Order Summary</h3>
+            <div class="price-breakdown">
+              <div class="price-row">
+                <span>Subtotal:</span>
+                <span>${{ selectedOrder.subtotal.toFixed(2) }}</span>
+              </div>
+              <div class="price-row">
+                <span>Delivery Fee:</span>
+                <span *ngIf="selectedOrder.deliveryFee > 0">${{ selectedOrder.deliveryFee.toFixed(2) }}</span>
+                <span *ngIf="selectedOrder.deliveryFee === 0" class="free-text">FREE</span>
+              </div>
+              <div class="price-row">
+                <span>Tax:</span>
+                <span>${{ selectedOrder.tax.toFixed(2) }}</span>
+              </div>
+              <div class="price-row total-row">
+                <span>Total:</span>
+                <span>${{ selectedOrder.total.toFixed(2) }}</span>
+              </div>
+            </div>
+
+            <div class="nutrition-summary">
+              <h4>Total Nutrition</h4>
+              <div class="nutrition-stats">
+                <div class="nutrition-stat">
+                  <span class="nutrition-label">Protein</span>
+                  <span class="nutrition-value">{{ getTotalProtein(selectedOrder) }}g</span>
+                </div>
+                <div class="nutrition-stat">
+                  <span class="nutrition-label">Calories</span>
+                  <span class="nutrition-value">{{ getTotalCalories(selectedOrder) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeOrderDetails()">Close</button>
+        <button class="btn btn-primary" (click)="reorderItems(selectedOrder); closeOrderDetails()">
+          Reorder Items
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

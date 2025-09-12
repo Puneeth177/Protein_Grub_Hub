@@ -1,0 +1,240 @@
+.theme-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--light-surface);
+  border: 2px solid var(--light-border);
+  border-radius: var(--border-radius);
+  color: var(--light-text);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 160px;
+  justify-content: space-between;
+  box-shadow: 0 var(--space-xs) var(--space-sm) rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .theme-button {
+  background: var(--dark-surface);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+  box-shadow: 0 var(--space-xs) var(--space-sm) rgba(0, 0, 0, 0.2);
+}
+
+.theme-button:hover {
+  border-color: var(--light-primary);
+  background: var(--light-accent);
+  color: var(--dark-text);
+  transform: translateY(-1px);
+  box-shadow: 0 var(--space-xs) var(--space-md) rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .theme-button:hover {
+  border-color: var(--dark-primary);
+  background: var(--dark-accent);
+  box-shadow: 0 var(--space-xs) var(--space-md) rgba(0, 0, 0, 0.3);
+}
+
+.theme-button.active {
+  border-color: var(--light-primary);
+  background: var(--light-primary);
+  color: var(--dark-text);
+}
+
+.dark-theme .theme-button.active {
+  border-color: var(--dark-primary);
+  background: var(--dark-primary);
+}
+
+.theme-icon {
+  font-size: var(--font-size-md);
+  transition: transform var(--transition-normal);
+}
+
+.theme-button:hover .theme-icon {
+  transform: scale(1.1);
+}
+
+.theme-text {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 var(--space-sm);
+}
+
+.dropdown-arrow {
+  font-size: var(--font-size-xs);
+  transition: transform var(--transition-normal);
+}
+
+.theme-button.active .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.theme-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  margin-top: 4px;
+  min-width: 280px;
+}
+
+.theme-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dropdown-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.theme-options {
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+}
+
+.theme-option:hover {
+  background: var(--color-background);
+}
+
+.theme-option.selected {
+  background: var(--color-primary-light);
+  color: white;
+}
+
+.theme-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.color-preview {
+  display: flex;
+  gap: 4px;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.theme-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.theme-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.theme-option.selected .theme-name {
+  color: white;
+}
+
+.theme-description {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.theme-option.selected .theme-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.selected-indicator {
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .theme-button {
+    min-width: 140px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .theme-dropdown {
+    min-width: 260px;
+    right: auto;
+    left: 0;
+  }
+  
+  .theme-text {
+    max-width: 80px;
+  }
+  
+  .dropdown-header {
+    padding: 12px 16px 8px;
+  }
+  
+  .theme-option {
+    padding: 10px 12px;
+  }
+  
+  .color-dot {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .theme-dropdown {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+}
