@@ -1,30 +1,56 @@
-require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const connectDB = require('./utils/db');
+const path = require('path');
 
+// Initialize express app
 const app = express();
 
-// --- Middleware ---
-app.use(cors()); // Allow requests from the Angular frontend
-app.use(express.json()); // Parse JSON bodies
+// Connect to MongoDB
+connectDB();
 
-// --- Database Connection ---
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/pgh-database')
-    .then(() => console.log('MongoDB connected successfully.'))
-    .catch(err => console.error('MongoDB connection error:', err));
+// Middleware
+app.use(cors({
+    origin: ['http://localhost:4200', 'http://localhost:52023'],
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// --- Routes ---
-// TODO: Import and use routes for auth, meals, orders, etc.
-// const authRoutes = require('./routes/authRoutes');
-// app.use('/api/auth', authRoutes);
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+    next();
+});
 
+// API Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/reviews', require('./routes/reviews'));
+
+// Serve static files from the Angular app
+app.use(express.static(path.join(__dirname, 'frontend/dist/frontend')));
+
+// API Health check
 app.get('/api', (req, res) => {
     res.send('Protein Grub Hub API is running...');
 });
 
-// --- Server Initialization ---
-const PORT = process.env.PORT || 5000;
+// Handle Angular routing
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/dist/frontend/index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+});
+
+// Server Initialization
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
