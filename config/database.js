@@ -1,6 +1,6 @@
 const config = {
     mongodb: {
-        uri: `mongodb+srv://mspuneeth73_db_user:gwbfPevUA9tvE7RO@cluster0.p7irxmu.mongodb.net/protein-grub-hub?retryWrites=true&w=majority&appName=Cluster0`,
+        uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/protein-grub-hub',
         options: {
             useNewUrlParser: true,
             useUnifiedTopology: true,

@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CartItem } from '../models/order.model';
 import { Meal } from '../models/meal.model';
 import { environment } from '../../environments/environment';
+import { AuthService, User } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,10 @@ export class CartService {
     }
   }
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     // Load cart from localStorage first for immediate display
     if (typeof window !== 'undefined' && window.localStorage) {
       const savedCart = localStorage.getItem('cart');
@@ -39,16 +43,25 @@ export class CartService {
         this.cartSubject.next(this.cartItems);
       }
     }
-    // Then fetch from server to ensure sync
-    this.fetchCartFromServer();
+    // Then fetch from server to ensure sync, but only if authenticated
+    if (this.authService.isAuthenticated()) {
+      this.fetchCartFromServer();
+    }
+
+    // Subscribe to auth changes to fetch cart when user logs in
+    this.authService.currentUser$.subscribe(user => {
+      if (user && this.authService.isAuthenticated()) {
+        this.fetchCartFromServer();
+      } else {
+        // Clear cart when user logs out
+        this.clearCart();
+      }
+    });
   }
 
   private getAuthHeaders(): { [key: string]: string } {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const token = localStorage.getItem('token');
-      return token ? { 'Authorization': `Bearer ${token}` } : {};
-    }
-    return {};
+    const token = this.authService.getToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
   private fetchCartFromServer(): void {
@@ -127,25 +140,36 @@ export class CartService {
   }
 
   private updateCart(syncWithServer: boolean = true): void {
-    // Update local state
-    this.cartSubject.next([...this.cartItems]);
+      // Update local state
+      this.cartSubject.next([...this.cartItems]);
     
-    // Update localStorage
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('cart', JSON.stringify(this.cartItems));
-    }
+      // Update localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('cart', JSON.stringify(this.cartItems));
+      }
 
-    // Sync with server
-    if (syncWithServer) {
-      const headers = this.getAuthHeaders();
-      this.http.post(`${this.apiUrl}/cart`, { items: this.cartItems }, { headers })
-        .pipe(
-          catchError((error: HttpErrorResponse) => {
-            console.error('Error syncing cart with server:', error);
-            return of(null);
-          })
-        )
-        .subscribe();
-    }
+      // Sync with server only if authenticated
+      if (syncWithServer && this.authService.isAuthenticated()) {
+        const headers = this.getAuthHeaders();
+        if (!headers['Authorization']) {
+          console.log('Skipping cart sync: No auth token available');
+          return;
+        }
+
+        this.http.post(`${this.apiUrl}/cart`, { items: this.cartItems }, { headers })
+          .pipe(
+            catchError((error: HttpErrorResponse) => {
+              if (error.status === 401) {
+                console.log('Authentication expired, clearing cart...');
+                this.clearCart();
+                this.authService.logout(); // This will redirect to login
+              } else {
+                console.error('Error syncing cart with server:', error);
+              }
+              return of(null);
+            })
+          )
+          .subscribe();
+      }
   }
 }

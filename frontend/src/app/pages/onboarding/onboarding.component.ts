@@ -42,7 +42,9 @@ export class OnboardingComponent {
     weight: '',
     height: '',
     activityLevel: '',
-    proteinGoal: 0
+    proteinGoal: 0,
+    bmi: 0,
+    bmiCategory: ''
   };
 
   activityLevels = [
@@ -86,20 +88,51 @@ export class OnboardingComponent {
     }
   }
 
+  calculateBMI() {
+    if (this.healthInfo.weight && this.healthInfo.height) {
+      const weight = parseFloat(this.healthInfo.weight);
+      const heightInMeters = parseFloat(this.healthInfo.height) / 100;
+      const bmi = weight / (heightInMeters * heightInMeters);
+      this.healthInfo.bmi = Math.round(bmi * 10) / 10;
+
+      // Determine BMI category
+      if (bmi < 18.5) {
+        this.healthInfo.bmiCategory = 'Underweight';
+      } else if (bmi < 25) {
+        this.healthInfo.bmiCategory = 'Normal weight';
+      } else if (bmi < 30) {
+        this.healthInfo.bmiCategory = 'Overweight';
+      } else {
+        this.healthInfo.bmiCategory = 'Obese';
+      }
+    }
+  }
+
   calculateProteinGoal() {
     if (this.healthInfo.weight && this.healthInfo.activityLevel) {
       const weight = parseFloat(this.healthInfo.weight);
       const activityMultiplier = this.activityLevels.find(level => level.id === this.healthInfo.activityLevel)?.multiplier || 1.2;
       
-      // Base protein calculation: 0.8-2.2g per kg body weight depending on goals and activity
+      // Calculate BMI first
+      this.calculateBMI();
+      
+      // Base protein calculation adjusted for BMI and goals
       let proteinPerKg = 1.2; // Base amount
       
+      // Adjust base protein based on BMI category
+      if (this.healthInfo.bmiCategory === 'Underweight') {
+        proteinPerKg = 1.6; // Higher protein for underweight individuals
+      } else if (this.healthInfo.bmiCategory === 'Overweight' || this.healthInfo.bmiCategory === 'Obese') {
+        proteinPerKg = 1.4; // Moderate protein for weight management
+      }
+      
+      // Further adjust based on fitness goals
       if (this.fitnessGoal === 'build-muscle') {
-        proteinPerKg = 2.2;
+        proteinPerKg *= 1.5; // 1.8-2.2g per kg for muscle building
       } else if (this.fitnessGoal === 'lose-weight') {
-        proteinPerKg = 1.8;
+        proteinPerKg *= 1.3; // Higher protein for preserving muscle during weight loss
       } else if (this.fitnessGoal === 'improve-endurance') {
-        proteinPerKg = 1.6;
+        proteinPerKg *= 1.2; // Moderate increase for endurance training
       }
       
       // Adjust for activity level

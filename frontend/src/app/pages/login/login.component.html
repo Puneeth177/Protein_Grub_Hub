@@ -58,16 +58,11 @@
       >
         {{ isLoading ? 'Signing In...' : 'Sign In' }}
       </button>
-
-      <button
-        type="button"
-        class="btn btn-secondary btn-full"
-        (click)="demoLogin()"
-        [disabled]="isLoading"
-        aria-label="Demo Login"
-      >
-        Demo Login
-      </button>
+      <div class="social-login">
+        <div class="divider">or</div>
+        <!-- Google Sign-In button will be rendered here by Google's library -->
+        <div id="google-signin-button" aria-label="Sign in with Google"></div>
+      </div>
     </form>
 
     <div class="login-footer">

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user.model');
 const auth = require('../middleware/auth');
@@ -122,6 +123,71 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Server error during login' });
+    }
+});
+
+// Google Sign-In (ID token verification)
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+router.post('/google', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        if (!idToken) return res.status(400).json({ message: 'Missing idToken' });
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            return res.status(400).json({ message: 'Invalid Google token' });
+        }
+
+        const email = payload.email;
+        const name = payload.name || '';
+        const googleId = payload.sub; // Google's unique identifier
+
+        // Find or create user
+        let user = await User.findOne({ $or: [{ email }, { googleId }] });
+        if (!user) {
+            user = new User({
+                email,
+                name,
+                googleId,
+                onboardingCompleted: false,
+                fitnessGoal: '',
+                dietaryPreferences: [],
+                healthInfo: {}
+            });
+            await user.save();
+        }
+
+        // Create JWT for your app
+        console.log('Creating JWT for user:', user._id);
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET || 'your-default-secret',
+            { expiresIn: '24h' }
+        );
+
+        const userResponse = {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            isAuthenticated: true,
+            proteinGoal: user.proteinGoal,
+            onboardingCompleted: user.onboardingCompleted,
+            fitnessGoal: user.fitnessGoal,
+            dietaryPreferences: user.dietaryPreferences,
+            healthInfo: user.healthInfo
+        };
+
+        console.log('Google auth success - returning:', { userId: user._id, email: user.email });
+        res.json({ user: userResponse, token, message: 'Login successful' });
+    } catch (error) {
+        console.error('Google sign-in error:', error);
+        res.status(500).json({ message: 'Google sign-in failed' });
     }
 });
 

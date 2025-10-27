@@ -67,7 +67,7 @@ export class AuthService {
     }
   }
 
-  private getToken(): string | null {
+  public getToken(): string | null {
     return this.storageService.getItem('token');
   }
 
@@ -132,6 +132,18 @@ export class AuthService {
 
   register(name: string, email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/register`, { name, email, password })
+      .pipe(
+        tap(response => this.setUserData(response)),
+        catchError(error => this.handleError(error))
+      );
+  }
+
+  /**
+   * Sign in / Sign up using Google ID token (issued by Google Identity Services).
+   * Server will verify the token and return the application's AuthResponse (token + user).
+   */
+  googleLogin(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/google`, { idToken })
       .pipe(
         tap(response => this.setUserData(response)),
         catchError(error => this.handleError(error))

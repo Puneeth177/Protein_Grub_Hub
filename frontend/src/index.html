@@ -6,7 +6,30 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <script src="assets/js/theme-toggle.js"></script>
+  <!-- Theme Toggle -->
+  <script>
+    // Inline theme toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark-theme');
+      }
+      
+      window.toggleTheme = function() {
+        if (document.documentElement.classList.contains('dark-theme')) {
+          document.documentElement.classList.remove('dark-theme');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark-theme');
+          localStorage.setItem('theme', 'dark');
+        }
+      };
+    });
+  </script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <app-root></app-root>

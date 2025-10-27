@@ -85,6 +85,7 @@
             placeholder="175"
             min="100"
             max="250"
+            (input)="calculateBMI()"
           />
         </div>
       </div>
@@ -106,11 +107,17 @@
         </select>
       </div>
       
-      <div class="protein-goal" *ngIf="healthInfo.proteinGoal > 0">
-        <div class="goal-card">
+      <div class="goal-cards" *ngIf="healthInfo.weight && healthInfo.height">
+        <div class="goal-card bmi-card" [ngClass]="healthInfo.bmiCategory.toLowerCase()">
+          <h3>Your BMI</h3>
+          <div class="goal-amount">{{ healthInfo.bmi }}</div>
+          <p>Category: {{ healthInfo.bmiCategory }}</p>
+        </div>
+        
+        <div class="goal-card" *ngIf="healthInfo.proteinGoal > 0">
           <h3>Your Daily Protein Goal</h3>
           <div class="goal-amount">{{ healthInfo.proteinGoal }}g</div>
-          <p>Based on your goals and activity level</p>
+          <p>Based on your BMI, goals and activity level</p>
         </div>
       </div>
     </div>
