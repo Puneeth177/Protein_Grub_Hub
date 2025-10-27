@@ -3,6 +3,7 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 export const serverRoutes: ServerRoute[] = [
   {
     path: '**',
-    renderMode: RenderMode.Prerender
+    // Use Server rendering for dynamic routes (avoid prerender params requirements)
+    renderMode: RenderMode.Server
   }
 ];

@@ -329,12 +329,64 @@
 }
 
 .meal-actions {
-  display: flex;
-  gap: 12px;
+  display: block;
+  width: 100%;
+  margin-top: 12px;
 }
 
 .meal-actions .btn {
+  display: block;
+  width: 100%;
+}
+
+/* Add-to-cart full width bar */
+.add-bar .add-full {
+  width: 100%;
+  display: block;
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* Quantity bar after adding to cart: - [protein] + */
+.quantity-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+}
+
+.quantity-bar .qty-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-surface);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-bar .qty-btn:hover {
+  background: var(--color-border);
+}
+
+.quantity-bar .qty-center {
   flex: 1;
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
 }
 
 /* No Results */

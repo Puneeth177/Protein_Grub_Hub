@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 // import { ApiService } from '../../services/api.service';
 import { CartService } from '../../services/cart.service';
 import { Meal } from '../../models/meal.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-meals',
@@ -13,7 +14,7 @@ import { Meal } from '../../models/meal.model';
   templateUrl: './meals.component.html',
   styleUrls: ['./meals.component.css']
 })
-export class MealsComponent implements OnInit {
+export class MealsComponent implements OnInit, OnDestroy {
   meals: Meal[] = [];
   filteredMeals: Meal[] = [];
   isLoading = true;
@@ -55,7 +56,13 @@ export class MealsComponent implements OnInit {
   ];
 
   constructor(private cartService: CartService) {}
+  private cartSub?: Subscription;
+  // map mealId -> quantity in cart
+  cartMap: { [mealId: string]: number } = {};
 
+  ngOnDestroy(): void {
+    if (this.cartSub) this.cartSub.unsubscribe();
+  }
   ngOnInit() {
     // Use static mock data for SSR compatibility
     const staticMeals = [
@@ -103,6 +110,18 @@ export class MealsComponent implements OnInit {
     this.filteredMeals = staticMeals;
     this.isLoading = false;
     this.applyFilters();
+
+    // Subscribe to cart updates so UI reflects quantities
+    this.cartSub = this.cartService.cart$.subscribe(items => {
+      this.cartMap = {};
+      if (items && items.length) {
+        items.forEach((it: any) => {
+          if (it && it.meal && it.meal._id) {
+            this.cartMap[it.meal._id] = it.quantity || 0;
+          }
+        });
+      }
+    });
   }
 
   applyFilters() {
@@ -165,9 +184,33 @@ export class MealsComponent implements OnInit {
     this.applyFilters();
   }
 
-  addToCart(meal: Meal) {
-    this.cartService.addToCart(meal);
+  addToCart(event: Event, meal: Meal) {
+    // Prevent any parent click handlers / navigation
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.cartService.addToCart(meal, 1);
     // You could add a toast notification here
+  }
+
+  getQuantity(mealId: string): number {
+    return this.cartMap[mealId] || 0;
+  }
+
+  increase(event: Event, meal: Meal) {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.cartService.addToCart(meal, 1);
+  }
+
+  decrease(event: Event, meal: Meal) {
+    event?.stopPropagation();
+    event?.preventDefault();
+    const current = this.getQuantity(meal._id);
+    if (current > 1) {
+      this.cartService.updateQuantity(meal._id, current - 1);
+    } else {
+      this.cartService.removeFromCart(meal._id);
+    }
   }
 
   clearFilters() {

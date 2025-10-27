@@ -32,7 +32,8 @@ export const routes: Routes = [
   {
     path: 'cart',
     loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
-    canActivate: [authGuard]
+    // Allow unauthenticated users to view/edit their cart locally.
+    // Checkout should remain protected, but viewing the cart does not require authentication.
   },
   {
     path: 'checkout',

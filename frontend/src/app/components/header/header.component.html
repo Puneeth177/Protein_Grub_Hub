@@ -23,12 +23,13 @@
     </nav>
 
     <div class="nav-actions">
-      <ng-container *ngIf="currentUser$ | async as user; else loginButtons">
-        <a routerLink="/cart" class="cart-icon">
-          🛒
-          <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
-        </a>
+      <!-- Cart icon visible for all users (guest or authenticated). Count comes from CartService -->
+      <a routerLink="/cart" class="cart-icon">
+        🛒
+        <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
+      </a>
 
+      <ng-container *ngIf="currentUser$ | async as user; else loginButtons">
         <div class="user-menu">
           <button class="user-button" (click)="toggleMenu()">
             <span class="user-name">{{ user.name || user.email }}</span>

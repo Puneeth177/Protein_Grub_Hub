@@ -174,16 +174,18 @@
           </div>
           
           <div class="meal-actions">
-            <a [routerLink]="['/meals', meal._id]" class="btn btn-outline" [attr.aria-label]="'View details for ' + meal.name">
-              View Details
-            </a>
-            <button 
-              class="btn btn-primary"
-              (click)="addToCart(meal)"
-              [attr.aria-label]="'Add ' + meal.name + ' to cart'"
-            >
-              Add to Cart
-            </button>
+            <!-- Removed 'View Details' per UX change. Implement add-to-cart bar -->
+            <div *ngIf="getQuantity(meal._id) === 0" class="add-bar" role="group" aria-label="Add to cart">
+              <button class="btn btn-primary add-full" (click)="addToCart($event, meal)" [attr.aria-label]="'Add ' + meal.name + ' to cart'">
+                Add to Cart
+              </button>
+            </div>
+
+            <div *ngIf="getQuantity(meal._id) > 0" class="quantity-bar" role="group" aria-label="Adjust quantity">
+              <button class="qty-btn" (click)="decrease($event, meal)" aria-label="Decrease quantity">-</button>
+              <div class="qty-center">{{ meal.protein_grams }}g × {{ getQuantity(meal._id) }}</div>
+              <button class="qty-btn" (click)="increase($event, meal)" aria-label="Increase quantity">+</button>
+            </div>
           </div>
         </div>
       </div>

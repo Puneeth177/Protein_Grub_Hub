@@ -150,11 +150,17 @@ export class AuthService {
       );
   }
 
-  logout() {
+  /**
+   * Log out the current user.
+   * @param redirect If true (default) navigate to the login page. Set to false to clear auth silently.
+   */
+  logout(redirect: boolean = true) {
     this.storageService.removeItem('token');
     this.storageService.removeItem('currentUser');
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+    if (redirect) {
+      this.router.navigate(['/login']);
+    }
   }
 
   updateUserProfile(userData: Partial<User>): Observable<User> {

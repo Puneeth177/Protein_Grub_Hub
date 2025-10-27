@@ -160,9 +160,16 @@ export class CartService {
           .pipe(
             catchError((error: HttpErrorResponse) => {
               if (error.status === 401) {
+                // Auth token invalid/expired. Clear local cart and clear auth silently.
                 console.log('Authentication expired, clearing cart...');
                 this.clearCart();
-                this.authService.logout(); // This will redirect to login
+                // Logout without redirect - let UI continue to function for guests
+                try {
+                  this.authService.logout(false);
+                } catch (e) {
+                  // In case logout signature differs, fallback to original call
+                  try { (this.authService as any).logout(); } catch (_) {}
+                }
               } else {
                 console.error('Error syncing cart with server:', error);
               }
