@@ -2,7 +2,7 @@
 
 A fully functional web application for protein-focused meal delivery and nutrition tracking, built with Angular 20 and modern web technologies.
 
-## 🎉 **LIVE APPLICATION**: http://localhost:62812/
+## 🎉 **LIVE APPLICATION**: http://localhost:4200/
 
 **✅ ALL BUTTONS WORK | ✅ COMPLETE USER FLOWS | ✅ READY FOR LAUNCH**
 
