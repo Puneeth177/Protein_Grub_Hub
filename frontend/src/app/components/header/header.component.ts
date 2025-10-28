@@ -4,12 +4,13 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
 import { ThemeService } from '../../services/theme.service';
+import { NavAvatarComponent } from '../nav-avatar/nav-avatar.component';
 import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NavAvatarComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })

@@ -5,6 +5,12 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: function() { return !this.googleId; } }, // Only required if not Google auth
     googleId: { type: String },
     name: { type: String, required: true },
+
+    // Optional avatar snapshot
+    avatar: {
+        url: { type: String }
+    },
+
     proteinGoal: { type: Number },
     onboardingCompleted: { type: Boolean, default: false },
     fitnessGoal: { type: String },

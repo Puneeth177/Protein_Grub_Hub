@@ -15,6 +15,7 @@ export interface HealthInfo {
 
 export interface User {
   _id?: string;
+  id?: string;
   email: string;
   name: string;
   isAuthenticated: boolean;
@@ -23,6 +24,10 @@ export interface User {
   fitnessGoal?: string;
   dietaryPreferences?: string[];
   healthInfo?: HealthInfo;
+  avatar?: {
+    url?: string;
+    id?: string;
+  };
 }
 
 export interface AuthResponse {
@@ -81,7 +86,19 @@ export class AuthService {
 
   private setUserData(response: AuthResponse) {
     if (response && response.token && response.user) {
-      const user = { ...response.user, isAuthenticated: true };
+      const respUser: any = response.user || {};
+      const prevAvatar = this.currentUserSubject.value?.avatar?.url || null;
+      const avatarUrl = respUser.avatar?.url || respUser.avatarUrl || prevAvatar || null;
+
+      const user: User = {
+        ...respUser,
+        isAuthenticated: true,
+        avatar: { url: avatarUrl || undefined }
+      };
+
+      // Remove stray avatarUrl if present to keep a single source of truth
+      delete (user as any).avatarUrl;
+
       this.setStorageItem('token', response.token);
       this.setStorageItem('currentUser', JSON.stringify(user));
       this.currentUserSubject.next(user);
@@ -178,10 +195,19 @@ export class AuthService {
         if (!response?.user) {
           throw new Error('Invalid response from server');
         }
-        const updatedUser = { ...this.currentUserSubject.value, ...response.user };
-        this.currentUserSubject.next(updatedUser);
-        this.storageService.setItem('currentUser', JSON.stringify(updatedUser));
-        return updatedUser;
+        const respUser: any = response.user || {};
+        const avatarUrl = respUser.avatar?.url || respUser.avatarUrl || null;
+
+        const normalized = {
+          ...this.currentUserSubject.value,
+          ...respUser,
+          avatar: { url: avatarUrl || undefined }
+        };
+        delete (normalized as any).avatarUrl;
+
+        this.currentUserSubject.next(normalized as User);
+        this.storageService.setItem('currentUser', JSON.stringify(normalized));
+        return normalized as User;
       }),
       catchError(error => this.handleError(error))
     );
@@ -201,7 +227,42 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateAvatar(avatarUrl: string) {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => 'No authentication token found');
+    }
+
+    return this.http.put<AuthResponse>(
+      `${this.API_URL}/auth/profile`,
+      { avatarUrl }, // backend expects this shape
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).pipe(
+      map(response => {
+        if (!response?.user) throw new Error('Invalid response from server');
+        const respUser: any = response.user || {};
+        const normalized = {
+          ...this.currentUserSubject.value,
+          ...respUser,
+          avatar: { url: respUser.avatar?.url || respUser.avatarUrl || undefined }
+        };
+        delete (normalized as any).avatarUrl;
+        this.currentUserSubject.next(normalized as User);
+        this.storageService.setItem('currentUser', JSON.stringify(normalized));
+        return normalized as User;
+      }),
+      catchError(error => this.handleError(error))
+    );
+  }
+
   updateUser(userData: Partial<User>): Observable<User> {
     return this.updateUserProfile(userData);
+  }
+
+  // Update current user locally and persist to storage
+  setCurrentUser(user: User) {
+    const updated = { ...user, isAuthenticated: true };
+    this.currentUserSubject.next(updated);
+    this.storageService.setItem('currentUser', JSON.stringify(updated));
   }
 }

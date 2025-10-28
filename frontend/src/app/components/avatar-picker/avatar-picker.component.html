@@ -1,0 +1,109 @@
+<div class="avatar-picker">
+  <div class="avatar-picker-container">
+    <!-- Preview Section -->
+    <div class="preview-section">
+      <h3>Avatar Preview</h3>
+      <div class="avatar-preview-container">
+        <div *ngIf="previewUrl || selectedAvatarUrl" class="avatar-preview-image">
+          <img [src]="selectedAvatarUrl || previewUrl" alt="Avatar preview" />
+        </div>
+        <div *ngIf="!previewUrl && !selectedAvatarUrl" class="avatar-preview-initials">
+          {{ getInitials(userName) }}
+        </div>
+      </div>
+      <p class="preview-hint">160–200px preview (circular)</p>
+    </div>
+
+    <!-- Messages -->
+    <div class="alerts">
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="alert alert-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+    </div>
+
+    <!-- Default Avatars -->
+    <div class="default-avatars-section">
+      <h3>Choose a Default Avatar</h3>
+      <div class="avatars-grid">
+        <button
+          *ngFor="let avatar of defaultAvatars"
+          class="avatar-option"
+          [class.selected]="selectedAvatarUrl === avatar.url"
+          (click)="onSelectDefault(avatar.url)"
+          type="button"
+          [attr.aria-label]="'Select ' + avatar.alt"
+          [attr.aria-pressed]="selectedAvatarUrl === avatar.url"
+        >
+          <img [src]="avatar.url" [alt]="avatar.alt" />
+        </button>
+      </div>
+    </div>
+
+    <!-- File Upload Section -->
+    <div class="upload-section">
+      <h3>Upload Custom Avatar</h3>
+      <div class="upload-input-wrapper">
+        <input
+          #fileInput
+          id="file-upload"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          (change)="onFileSelected($event)"
+          class="file-input"
+          aria-label="Upload avatar image"
+        />
+        <label for="file-upload" class="upload-label">
+          <span class="upload-icon">📤</span>
+          <span>Choose Image (PNG, JPEG, WebP)</span>
+          <span class="file-size-hint">Max 5 MB</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Validation Info -->
+    <div class="validation-info">
+      <ul>
+        <li>Maximum file size: 5 MB</li>
+        <li>Allowed formats: PNG, JPEG, WebP</li>
+        <li>Square crop (circular preview)</li>
+        <li>Client-side resized to 512×512px</li>
+      </ul>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button
+        type="button"
+        class="btn btn-outline"
+        (click)="cancel()"
+        [disabled]="uploading"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="deleteAvatar()"
+        [disabled]="uploading"
+        aria-label="Remove current avatar"
+      >
+        Remove Avatar
+      </button>
+
+      <!-- Save selected default or uploaded image to profile -->
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="onSaveAvatar()"
+        [disabled]="uploading || (!selectedAvatarUrl && !previewUrl)"
+      >
+        <span *ngIf="uploading">Saving...</span>
+        <span *ngIf="!uploading">Save Avatar</span>
+      </button>
+    </div>
+  </div>
+</div>

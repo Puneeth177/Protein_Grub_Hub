@@ -13,6 +13,53 @@
   </div>
 
   <div class="profile-content" *ngIf="currentUser">
+    <!-- Avatar Section -->
+    <div class="profile-card">
+      <div class="card-header">
+        <h2>Avatar</h2>
+        <button class="btn btn-outline btn-sm" (click)="openAvatarEditor()" *ngIf="!showAvatarEditor">
+          Change Avatar
+        </button>
+      </div>
+
+      <div class="card-content">
+        <!-- Large circular preview (~180px) -->
+        <div *ngIf="!showAvatarEditor" class="avatar-summary" style="display:flex;align-items:center;gap:16px;">
+          <div style="width:180px;height:180px;border-radius:50%;overflow:hidden;border:2px solid var(--color-border);flex:0 0 auto;">
+            <img
+              *ngIf="currentUser.avatar?.url; else initialsAvatar"
+              [src]="currentUser.avatar?.url"
+              [alt]="'User avatar — ' + (currentUser.name || currentUser.email)"
+              style="width:100%;height:100%;object-fit:cover;display:block;"
+            />
+            <ng-template #initialsAvatar>
+              <div
+                style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e9ecef;color:#333;font-size:3rem;font-weight:700;"
+              >
+                {{ (currentUser.name || currentUser.email) | slice:0:2 | uppercase }}
+              </div>
+            </ng-template>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div><strong>{{ currentUser.name }}</strong></div>
+            <div class="text-muted">Recommended size 512×512. Shown here at ~180px.</div>
+            <button class="btn btn-secondary btn-sm" (click)="openAvatarEditor()">Change Avatar</button>
+          </div>
+        </div>
+
+        <!-- Avatar editor -->
+        <app-avatar-picker
+          *ngIf="showAvatarEditor && currentUser"
+          [userId]="currentUser._id || ''"
+          [userName]="currentUser.name || currentUser.email"
+          [currentAvatar]="currentUser.avatar || null"
+          (avatarSelected)="onAvatarSelected($event)"
+          (cancelled)="closeAvatarEditor()"
+        ></app-avatar-picker>
+      </div>
+    </div>
+
     <!-- Profile Overview -->
     <div class="profile-card">
       <div class="card-header">

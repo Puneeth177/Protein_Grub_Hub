@@ -21,7 +21,7 @@ router.post('/register', [
             return res.status(400).json({ message: errors.array()[0].msg });
         }
 
-        const { email, password, name } = req.body;
+        const { email, password, name, avatarUrl } = req.body;
         
         // Check if user exists
         let user = await User.findOne({ email });
@@ -34,6 +34,7 @@ router.post('/register', [
             email,
             name,
             password,
+            avatar: avatarUrl ? { url: avatarUrl } : undefined,
             onboardingCompleted: false,
             fitnessGoal: '',
             dietaryPreferences: [],
@@ -54,7 +55,7 @@ router.post('/register', [
         // Create and return JWT token
         const token = jwt.sign(
             { userId: user._id },
-            process.env.JWT_SECRET || 'your-default-secret',
+            process.env.JWT_SECRET || 'pgh_jwt_secret_key_f8K9mP2xL5vN3qR7tY4wZ1hJ6nB9cX0',
             { expiresIn: '24h' }
         );
 
@@ -63,6 +64,7 @@ router.post('/register', [
             _id: user._id,
             email: user.email,
             name: user.name,
+            avatarUrl: user.avatar?.url,
             isAuthenticated: true
         };
 
@@ -107,6 +109,7 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             email: user.email,
             name: user.name,
+            avatarUrl: user.avatar?.url, // add this line
             isAuthenticated: true,
             proteinGoal: user.proteinGoal,
             onboardingCompleted: user.onboardingCompleted,
@@ -155,11 +158,16 @@ router.post('/google', async (req, res) => {
                 email,
                 name,
                 googleId,
+                avatar: payload.picture ? { url: payload.picture } : undefined,
                 onboardingCompleted: false,
                 fitnessGoal: '',
                 dietaryPreferences: [],
                 healthInfo: {}
             });
+            await user.save();
+        } else if (!user.avatar?.url && payload.picture) {
+            // Backfill avatar for existing user if not set
+            user.avatar = { url: payload.picture };
             await user.save();
         }
 
@@ -180,9 +188,9 @@ router.post('/google', async (req, res) => {
             onboardingCompleted: user.onboardingCompleted,
             fitnessGoal: user.fitnessGoal,
             dietaryPreferences: user.dietaryPreferences,
-            healthInfo: user.healthInfo
+            healthInfo: user.healthInfo,
+            avatarUrl: user.avatar?.url
         };
-
         console.log('Google auth success - returning:', { userId: user._id, email: user.email });
         res.json({ user: userResponse, token, message: 'Login successful' });
     } catch (error) {
@@ -227,6 +235,15 @@ router.put('/profile', auth, async (req, res) => {
             }
         });
 
+        // Handle avatar URL explicitly
+        if (req.body.avatarUrl !== undefined) {
+            if (req.body.avatarUrl) {
+                user.avatar = { url: req.body.avatarUrl };
+            } else {
+                user.avatar = undefined;
+            }
+        }
+
         await user.save();
 
         // Return updated user without password
@@ -239,7 +256,8 @@ router.put('/profile', auth, async (req, res) => {
             onboardingCompleted: user.onboardingCompleted,
             fitnessGoal: user.fitnessGoal,
             dietaryPreferences: user.dietaryPreferences,
-            healthInfo: user.healthInfo
+            healthInfo: user.healthInfo,
+            avatarUrl: user.avatar?.url
         };
 
         res.json({

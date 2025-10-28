@@ -1,0 +1,155 @@
+<div class="reviews-container" role="region" aria-label="Customer reviews">
+  <div class="reviews-grid">
+    <!-- LEFT: Summary + List -->
+    <div class="col col-main">
+      <div class="summary">
+        <h3 class="section-title">What Our Customers Say</h3>
+        <div class="avg">
+          <span class="avg-score" aria-label="Average rating">{{ averageRating | number:'1.1-1' }}/5 ({{ total }} reviews)</span>
+          <span class="stars" aria-hidden="true">
+            <span class="star" *ngFor="let _ of stars(round(averageRating))">★</span>
+            <span class="star empty" *ngFor="let _ of emptyStars(round(averageRating))">☆</span>
+          </span>
+        </div>
+
+        <div class="dist">
+          <div class="bar" *ngFor="let r of [5,4,3,2,1]">
+            <span class="label">{{ r }}★</span>
+            <div class="meter">
+              <div class="fill" [style.width.%]="(ratingCounts[r] || 0) / (total || 1) * 100"></div>
+            </div>
+            <span class="count" [attr.aria-label]="(ratingCounts[r] || 0) + ' reviews'">{{ ratingCounts[r] || 0 }}</span>
+          </div>
+        </div>
+
+        <div class="sort">
+          <label>Sort:</label>
+          <button class="btn btn-sm" [class.active]="sort==='latest'" (click)="changeSort('latest')">Latest</button>
+          <button class="btn btn-sm" [class.active]="sort==='top'" (click)="changeSort('top')">Top</button>
+          <button class="btn btn-sm" [class.active]="sort==='rating'" (click)="changeSort('rating')">Rating</button>
+        </div>
+      </div>
+
+      <div class="list" *ngIf="!loading; else loadingTpl">
+        <div class="error" *ngIf="error">{{ error }}</div>
+
+        <div class="cards-grid">
+          <div *ngFor="let r of (reviews | slice:0:visibleCount)" role="article" aria-label="Customer review">
+            <div class="author">
+              <ng-container *ngIf="r.author.avatarUrl; else initialsAvatar">
+                <img [src]="r.author.avatarUrl" alt="{{ r.author.name }}'s avatar" class="avatar" />
+              </ng-container>
+              <ng-template #initialsAvatar>
+                <div class="avatar avatar-fallback" [attr.aria-label]="r.author.name">
+                  {{ getInitials(r.author.name) }}
+                </div>
+              </ng-template>
+
+              <div class="meta">
+                <div class="name">{{ r.author.name }}</div>
+                <div class="date">{{ r.createdAt | date:'MMM d, y, h:mm a' }}</div>
+              </div>
+
+              <div class="owner-actions" *ngIf="isOwner(r)">
+                <button
+                  class="btn btn-link danger"
+                  (click)="deleteReview(r)"
+                  [disabled]="deleting[r._id]"
+                  aria-label="Delete my review">
+                  🗑 Delete
+                </button>
+              </div>
+            </div>
+
+            <div class="rating" [attr.aria-label]="'Rating ' + r.rating + ' out of 5'">
+              <span class="star" *ngFor="let _ of stars(r.rating)">★</span>
+              <span class="star empty" *ngFor="let _ of emptyStars(r.rating)">☆</span>
+            </div>
+
+            <div class="text" *ngIf="r.text">{{ r.text }}</div>
+
+            <div class="reactions">
+              <button
+                class="react like"
+                [class.active]="getUserReaction(r)==='like'"
+                [attr.aria-pressed]="getUserReaction(r)==='like'"
+                [disabled]="reacting[r._id]"
+                (click)="react(r,'like')">
+                👍 <span class="count" [attr.aria-label]="r.likes + ' likes'">{{ r.likes }}</span>
+              </button>
+              <button
+                class="react dislike"
+                [class.active]="getUserReaction(r)==='dislike'"
+                [attr.aria-pressed]="getUserReaction(r)==='dislike'"
+                [disabled]="reacting[r._id]"
+                (click)="react(r,'dislike')">
+                👎 <span class="count" [attr.aria-label]="r.dislikes + ' dislikes'">{{ r.dislikes }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expand/Collapse controls -->
+        <div class="more-controls" *ngIf="reviews.length > collapsedCount">
+        <button class="btn btn-sm" type="button" (click)="toggleShowAll()" [attr.aria-expanded]="showAll">
+            {{ showAll ? 'Show less' : 'Show more' }}
+        </button>
+        </div>
+
+        <!-- Keep pagination (server paging) if you still want page navigation;
+            you can hide it on home if you prefer only expand/collapse -->
+        <div class="pagination" *ngIf="total > limit">
+        <button class="btn btn-sm" (click)="prevPage()" [disabled]="skip===0">Prev</button>
+        <span>{{ (skip/limit)+1 }} / {{ ceil(total/limit) }}</span>
+        <button class="btn btn-sm" (click)="nextPage()" [disabled]="skip+limit>=total">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Leave a review form -->
+    <aside class="col col-form">
+      <div class="form">
+        <h4>Leave a review</h4>
+        <div class="form-row">
+          <label>Rating *</label>
+          <div class="stars-picker">
+            <button
+              type="button"
+              class="star-btn"
+              *ngFor="let s of [1,2,3,4,5]"
+              (click)="formRating = s"
+              [attr.aria-label]="'Rate '+s"
+              [attr.aria-pressed]="formRating>=s"
+              [class.selected]="formRating>=s">★</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="revtext">Your review (optional)</label>
+          <textarea id="revtext" [(ngModel)]="formText" maxlength="1000" rows="3" placeholder="Share your experience…"></textarea>
+          <div class="hint">{{ remainingChars() }} characters left</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="submitReview()" [disabled]="submitting || formRating < 1">
+            <span *ngIf="submitting">Submitting…</span>
+            <span *ngIf="!submitting">Submit</span>
+          </button>
+          <span class="error" *ngIf="formError">{{ formError }}</span>
+          <span class="success" *ngIf="successMsg">{{ successMsg }}</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Keep the loading template at the end so *ngIf can find it -->
+  <ng-template #loadingTpl>
+    <div class="skeleton">
+      <div class="sk-row" *ngFor="let _ of [1,2,3]">
+        <div class="sk-avatar"></div>
+        <div class="sk-lines">
+          <div class="sk-line w60"></div>
+          <div class="sk-line w40"></div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

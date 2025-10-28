@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Meal } from '../../models/meal.model';
+import { ReviewListComponent } from '../../components/reviews/review-list.component';
 
 
 
@@ -47,10 +48,11 @@ const STATIC_MOCK_MEALS: Meal[] = [
   }
 ];
 
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ReviewListComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })

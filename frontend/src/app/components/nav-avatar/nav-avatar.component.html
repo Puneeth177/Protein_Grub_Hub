@@ -1,0 +1,11 @@
+<div class="nav-avatar" [ngClass]="'avatar-' + size">
+  <ng-container *ngIf="avatar?.url; else initialsTpl">
+    <img [src]="avatar?.url" [alt]="userName || 'User avatar'" class="avatar-image" />
+  </ng-container>
+
+  <ng-template #initialsTpl>
+    <div class="nav-avatar-fallback" [style.background]="getBackgroundColor()">
+      {{ getInitials(userName) }}
+    </div>
+  </ng-template>
+</div>

@@ -57,7 +57,7 @@ export class CheckoutComponent implements OnInit {
         street: ['', [Validators.required]],
         city: ['', [Validators.required]],
         state: ['', [Validators.required]],
-        zip_code: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]],
+        zip_code: ['', [Validators.required, Validators.pattern(/^\d{6}(-\d{4})?$/)]],
         phone: ['', [Validators.required, Validators.pattern(/^\+?1?\d{10}$/)]],
         delivery_instructions: ['']
       }),

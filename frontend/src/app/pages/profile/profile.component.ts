@@ -1,13 +1,17 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+// Add Inject and PLATFORM_ID
+import { Component, OnInit, Inject } from '@angular/core';
+// Keep CommonModule and add isPlatformBrowser
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
+import { AvatarPickerComponent, AvatarPickerResult } from '../../components/avatar-picker/avatar-picker.component';
+import { PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, AvatarPickerComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -17,6 +21,8 @@ export class ProfileComponent implements OnInit {
   isLoading = false;
   successMessage = '';
   errorMessage = '';
+
+  showAvatarEditor = false;
 
   // Form data
   profileForm = {
@@ -31,11 +37,16 @@ export class ProfileComponent implements OnInit {
   // Onboarding data
   onboardingData: any = null;
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    this.loadUserData();
-    this.loadOnboardingData();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadUserData();
+      this.loadOnboardingData();
+    }
   }
 
   loadUserData() {
@@ -50,6 +61,9 @@ export class ProfileComponent implements OnInit {
   }
 
   loadOnboardingData() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return; // Skip when running on the server
+    }
     const onboardingDataStr = localStorage.getItem('onboardingData');
     if (onboardingDataStr) {
       this.onboardingData = JSON.parse(onboardingDataStr);
@@ -90,6 +104,37 @@ export class ProfileComponent implements OnInit {
         this.errorMessage = error.message || 'Failed to update profile';
       }
     });
+  }
+
+  // Avatar handlers
+  openAvatarEditor() {
+    this.showAvatarEditor = true;
+  }
+
+  closeAvatarEditor() {
+    this.showAvatarEditor = false;
+  }
+
+  onAvatarSelected(result: AvatarPickerResult) {
+    if (!this.currentUser) return;
+
+    if (!result.url) {
+      // Avatar removed → clear avatar on the user
+      this.currentUser = { ...this.currentUser, avatar: undefined } as User;
+    } else {
+      // Avatar set/uploaded → update url/id
+      this.currentUser = {
+        ...this.currentUser,
+        avatar: { url: result.url, id: result.id }
+      } as User;
+    }
+
+    // Persist to AuthService so navbar and other surfaces update too
+    this.authService.setCurrentUser(this.currentUser as User);
+
+    this.showAvatarEditor = false;
+    this.successMessage = 'Avatar updated';
+    setTimeout(() => { this.successMessage = ''; }, 3000);
   }
 
   validateForm(): boolean {

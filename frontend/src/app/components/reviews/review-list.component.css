@@ -1,0 +1,290 @@
+/* Container and summary */
+.reviews-container {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+
+.section-title { margin: 0 0 8px; }
+
+.avg { display: flex; align-items: center; gap: 12px; }
+.avg-score { font-size: 1.25rem; font-weight: 600; }
+
+.stars .star { color: #f5a623; font-size: 1.2rem; }
+.stars .star.empty { color: #ddd; }
+
+/* Distribution bars */
+.dist { margin-top: 8px; }
+.dist .bar { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+.dist .label { width: 28px; text-align: right; }
+.dist .meter { flex: 1 1 auto; background: #eee; border-radius: 4px; height: 6px; overflow: hidden; }
+.dist .fill { height: 100%; background: #8bc34a; }
+
+/* Sorting */
+.sort { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.btn.btn-sm { font-size: .85rem; padding: 4px 8px; }
+.btn.btn-sm.active { background: #222; color: #fff; }
+
+/* Cards list area */
+.list .card { border-top: 1px solid #eee; padding: 12px 0; }
+
+/* Author and identity */
+.author { display: flex; align-items: center; gap: 10px; position: relative; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  object-fit: cover; background: #eee;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600; color: #555;
+}
+.meta .name { font-weight: 600; }
+
+.owner-actions { margin-left: auto; }
+.btn.btn-link { background: transparent; border: none; color: #444; cursor: pointer; padding: 4px 6px; }
+.btn.btn-link.danger { color: #b00020; }
+.btn.btn-link[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Read-only star rating in each card */
+.rating { display: inline-flex; align-items: center; gap: 2px; }
+.rating .star { color: #f5a623; }
+.rating .star.empty { color: #ddd; }
+
+/* Reactions */
+.reactions { display: flex; gap: 10px; margin-top: 8px; }
+.react {
+  border: 1px solid #ddd; background: #fafafa;
+  padding: 4px 8px; border-radius: 8px;
+}
+.react.active { background: #fff9f0; border-color: #f5a62333; }
+
+/* Form area */
+.form { border-top: 1px solid #eee; margin-top: 12px; padding-top: 12px; }
+.form-row { margin-bottom: 8px; }
+.error { color: #c00; }
+.success { color: #2e7d32; }
+.loading { padding: 8px 0; color: #666; }
+
+/* Form hint */
+.hint { font-size: .8rem; color: #666; margin-top: 4px; }
+
+/* Empty state */
+.empty { text-align: center; color: #666; padding: 12px 0; }
+.empty-title { font-weight: 600; margin-bottom: 4px; }
+.empty-sub { font-size: .9rem; }
+
+/* Skeleton loader */
+.skeleton .sk-row { display: flex; gap: 10px; padding: 10px 0; }
+.skeleton .sk-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(90deg,#eee,#f5f5f5,#eee);
+  background-size: 200% 100%; animation: shine 1.2s infinite;
+}
+.skeleton .sk-lines { flex: 1; }
+.skeleton .sk-line {
+  height: 10px; border-radius: 6px; margin: 6px 0;
+  background: linear-gradient(90deg,#eee,#f5f5f5,#eee);
+  background-size: 200% 100%; animation: shine 1.2s infinite;
+}
+.skeleton .sk-line.w60 { width: 60%; }
+.skeleton .sk-line.w40 { width: 40%; }
+@keyframes shine { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+/* Grid layout for cards (2 columns on desktop) */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .cards-grid { grid-template-columns: 1fr; }
+}
+
+/* Card polish */
+.card {
+  border: 1px solid #e9e9e9;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+/* Slightly larger review text */
+.card .text {
+  margin-top: 8px;
+  line-height: 1.45;
+  color: #333;
+}
+
+/* Interactive Star Picker (no squares, color up to selection) */
+.stars-picker {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+.stars-picker .star-btn {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  font-size: 28px; /* visible star size */
+  line-height: 1;
+  cursor: pointer;
+  color: #c8c8c8; /* unselected */
+  transition: transform .1s ease, color .15s ease;
+}
+
+/* Selected via class (Angular binding) */
+.stars-picker .star-btn.selected { color: #f5a623; }
+
+/* Selected via aria-pressed (robust fallback) */
+.stars-picker .star-btn[aria-pressed="true"] { color: #f5a623; }
+
+/* Remove any focus/border ring */
+.stars-picker .star-btn:focus,
+.stars-picker .star-btn:focus-visible,
+.stars-picker .star-btn::-moz-focus-inner {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+
+/* Micro-interactions */
+.stars-picker .star-btn:hover { transform: scale(1.08); }
+.stars-picker .star-btn:active { transform: scale(0.98); }
+
+/* Star picker: force no squares and correct colors even with global button styles */
+.stars-picker button.star-btn,
+.stars-picker .star-btn {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent !important;     /* kill theme background */
+  background-color: transparent !important;
+  border: 0 !important;                   /* kill theme borders */
+  box-shadow: none !important;            /* kill theme focus shadows */
+  border-radius: 0;                       /* avoid square look */
+  padding: 0;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #c8c8c8 !important;              /* unselected color enforced */
+  transition: transform .1s ease, color .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Selected color via class and aria-pressed (both enforced) */
+.stars-picker .star-btn.selected,
+.stars-picker .star-btn[aria-pressed="true"] {
+  color: #f5a623 !important;              /* gold, override white text from theme */
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Remove any focus ring squares; provide subtle text-glow instead */
+.stars-picker .star-btn:focus,
+.stars-picker .star-btn:focus-visible,
+.stars-picker .star-btn::-moz-focus-inner {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.stars-picker .star-btn:focus-visible {
+  text-shadow: 0 0 6px rgba(245, 166, 35, 0.6); /* accessible, non-square focus cue */
+}
+
+/* Hover/active micro-interactions */
+.stars-picker .star-btn:hover { transform: scale(1.08); }
+.stars-picker .star-btn:active { transform: scale(0.98); }
+
+/* Two-column layout for reviews and form */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr; /* main wider, form narrower */
+  gap: 20px;
+  align-items: start;
+}
+
+/* Make form card sticky on desktop for a nicer UX */
+@media (min-width: 992px) {
+  .col-form .form {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* Stack on tablets/phones */
+@media (max-width: 991px) {
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* Container spacing */
+.reviews-container {
+  color: inherit;               /* keep site text color */
+  margin: 0 auto;
+}
+
+/* Make left column content breathe */
+.col-main .summary { margin-bottom: 12px; }
+.list { margin-top: 8px; }
+
+/* Cards grid margins to avoid cramping next to form */
+.cards-grid { margin-top: 8px; }
+
+/* Card neutral style (visible on dark or light) */
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+/* Author text colors */
+.meta .name { color: inherit; }
+.date { color: #666; font-size: .9rem; }
+
+/* Distribution bar color more neutral */
+.dist .meter { background: rgba(0,0,0,.08); }
+.dist .fill { background: #6dbc6d; }
+
+/* Buttons small */
+.btn.btn-sm {
+  border: 1px solid rgba(0,0,0,.1);
+  background: #fafafa;
+  color: inherit;
+}
+
+/* Ensure form contrasts on any theme */
+.form {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* Textarea readable */
+.form textarea {
+  width: 100%;
+  background: #fff;
+  color: #222;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+/* Keep star picker overrides (no squares, proper color) – already present in your file */
+/* … (leave your star-picker block as previously added) */
+
+.more-controls {
+  margin-top: 10px;
+}
+.more-controls .btn.btn-sm {
+  border: 1px solid rgba(0,0,0,.1);
+  background: #fafafa;
+}
