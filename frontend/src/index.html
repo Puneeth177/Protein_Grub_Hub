@@ -6,27 +6,15 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <!-- Theme Toggle -->
   <script>
-    // Inline theme toggle functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark-theme');
-      }
-      
-      window.toggleTheme = function() {
-        if (document.documentElement.classList.contains('dark-theme')) {
-          document.documentElement.classList.remove('dark-theme');
-          localStorage.setItem('theme', 'light');
-        } else {
+    (function(){
+      try {
+        var isDark = localStorage.getItem('themeIsDark');
+        if (isDark === '1') {
           document.documentElement.classList.add('dark-theme');
-          localStorage.setItem('theme', 'dark');
         }
-      };
-    });
+      } catch (e) {}
+    })();
   </script>
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>

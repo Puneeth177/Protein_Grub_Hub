@@ -159,3 +159,27 @@
     font-size: 24px;
   }
 }
+
+/* Stack divider above Google button and center both */
+.social-login {
+  margin-top: 0px;
+  display: flex;
+  flex-direction: column;    /* stack vertically */
+  align-items: center;       /* center horizontally */
+  gap: 12px;                 /* space between "or" and button */
+}
+
+/* Center “or” text */
+.divider {
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* Ensure rendered Google button centers */
+#google-signin-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;            /* fallback centering */
+}

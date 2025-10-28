@@ -156,6 +156,7 @@
   margin: 0 0 12px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -261,6 +262,13 @@
   margin: 0 0 20px 0;
 }
 
+.cart-summary, 
+.cart-summary *,
+.price-row span,
+.price-row strong {
+  color: var(--color-text);
+}
+
 .delivery-progress {
   margin-bottom: 20px;
   padding: 16px;
@@ -320,7 +328,7 @@
 }
 
 .free-text {
-  color: #4a7c59;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -332,7 +340,7 @@
 }
 
 .nutrition-summary h4 {
-  color: #2d5a27;
+  color: var(--color-text);
   margin: 0 0 12px 0;
   font-size: 16px;
 }
@@ -431,3 +439,13 @@
     position: static;
   }
 }
+
+.quantity-btn { color: var(--color-text); }
+.quantity { color: var(--color-text); }
+
+.cart-summary, 
+.cart-summary *,
+.price-row span,
+.price-row strong { color: var(--color-text); }
+
+.nutrition-summary h4 { color: var(--color-text); }

@@ -1,30 +1,4 @@
-
-/* New Relic Inspired Theme Variables */
-:root {
-  --color-primary: #0074d9;
-  --color-primary-dark: #001f3f;
-  --color-accent: #00c7b1;
-  --color-bg: #f5f7fa;
-  --color-surface: #fff;
-  --color-text: #222b45;
-  --color-text-secondary: #6c7a89;
-  --color-border: #e0e7ef;
-  --color-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
-  --radius: 12px;
-  --transition: 0.2s cubic-bezier(.4,0,.2,1);
-}
-
-[data-theme="dark"] {
-  --color-primary: #00c7b1;
-  --color-primary-dark: #001f3f;
-  --color-accent: #0074d9;
-  --color-bg: #181c24;
-  --color-surface: #23293a;
-  --color-text: #f5f7fa;
-  --color-text-secondary: #b0b8c1;
-  --color-border: #2c3440;
-  --color-shadow: 0 4px 24px 0 rgba(0,0,0,0.32);
-}
+/* Theme tokens are defined globally in src/styles/themes.css */
 
 * {
   margin: 0;
@@ -70,20 +44,20 @@ body {
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
+  border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
   text-align: center;
-  transition: all var(--transition);
+  transition: all var(--transition-normal, 0.3s ease);
   border: 2px solid transparent;
   cursor: pointer;
   font-size: 1rem;
-  background: var(--color-primary);
+  background: var(--color-primary, #0074d9);
   color: #fff;
-  box-shadow: var(--color-shadow);
+  box-shadow: var(--color-shadow, 0 4px 24px 0 rgba(0,0,0,0.08));
 }
 .btn-primary {
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(90deg, var(--color-primary, #0074d9), var(--color-accent, #00c7b1));
   color: #fff;
   border: none;
 }
@@ -101,17 +75,6 @@ body {
   color: #fff;
 }
 
-/* Card & Surface */
-.card, .surface {
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: var(--color-shadow);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 1px solid var(--color-border);
-  transition: background var(--transition), color var(--transition);
-}
-
 /* Inputs */
 input, select, textarea {
   background: var(--color-surface);
@@ -127,46 +90,9 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--color-primary);
 }
 
-/* Floating Theme Switcher (to be added) */
-.floating-theme-switcher {
-  position: fixed;
-  right: 2rem;
-  bottom: 2rem;
-  z-index: 2000;
-  background: var(--color-surface);
-  border-radius: 50%;
-  box-shadow: var(--color-shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  cursor: pointer;
-  border: 2px solid var(--color-border);
-  transition: background var(--transition), border var(--transition);
-}
-.floating-theme-switcher:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-.floating-theme-switcher svg {
-  width: 28px;
-  height: 28px;
-  fill: var(--color-primary);
-  transition: fill var(--transition);
-}
-[data-theme="dark"] .floating-theme-switcher svg {
-  fill: var(--color-accent);
-}
-
-.btn-outline {
-  background: transparent;
-  color: #4a7c59;
-  border-color: #4a7c59;
-}
 
 .btn-outline:hover {
-  background: #4a7c59;
+  background: var(--color-primary);
   color: white;
 }
 
@@ -202,12 +128,12 @@ input:focus, select:focus, textarea:focus {
 
 .form-control:focus {
   outline: none;
-  border-color: #4a7c59;
-  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.15);
 }
 
 .form-control.error {
-  border-color: #dc3545;
+  border-color: var(--color-error);
 }
 
 .error-message {

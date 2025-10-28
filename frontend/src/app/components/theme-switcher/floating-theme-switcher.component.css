@@ -6,7 +6,7 @@
   z-index: 2000;
   background: var(--color-surface);
   border-radius: 50%;
-  box-shadow: var(--color-shadow);
+  box-shadow: var(--shadow-md, 0 10px 30px rgba(0,0,0,0.10));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,7 +14,7 @@
   height: 56px;
   cursor: pointer;
   border: 2px solid var(--color-border);
-  transition: background var(--transition), border var(--transition);
+  transition: background var(--transition-normal, 0.3s ease), border var(--transition-normal, 0.3s ease);
   outline: none;
 }
 
@@ -26,15 +26,27 @@
 .floating-theme-switcher svg {
   width: 32px;
   height: 32px;
-  fill: var(--color-primary);
-  transition: fill var(--transition), transform 0.2s;
+  /* Drive colors via currentColor to style both circle (fill) and rays (stroke) */
+  color: var(--color-text); /* light mode default */
+  transition: color var(--transition-normal, 0.3s ease), transform 0.2s;
   will-change: transform;
 }
-
-.floating-theme-switcher:hover svg {
-  transform: scale(1.18);
+/* Circle (sun core) fills with current color */
+.floating-theme-switcher svg circle { fill: currentColor; }
+/* Rays use strokes so they appear as stripes around the sun */
+.floating-theme-switcher svg line {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
-[data-theme="dark"] .floating-theme-switcher svg {
-  fill: var(--color-accent);
+/* Dark mode: brighter icon color for visibility */
+.dark-theme .floating-theme-switcher svg { color: var(--color-primary-light); }
+
+.floating-theme-switcher:hover svg { transform: scale(1.18); }
+
+/* On hover, keep strong contrast regardless of theme */
+:not(.dark-theme) .floating-theme-switcher:hover svg,
+.dark-theme .floating-theme-switcher:hover svg {
+  color: #ffffff;
 }

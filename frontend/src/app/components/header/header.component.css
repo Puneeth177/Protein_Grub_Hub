@@ -261,3 +261,124 @@
 
   .mobile-menu-toggle { display: flex; }
 }
+
+/* Ensure dropdown renders above any sticky/stacking content on pages like Cart */
+.user-menu { position: relative; }
+.dropdown-menu {
+  z-index: 2001;            /* was 1000 */
+  pointer-events: none;     /* prevent ghost area when closed */
+}
+.dropdown-menu.show {
+  pointer-events: auto;     /* clickable only when visible */
+}
+
+/* Diet mode toggle */
+.diet-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2px;
+  margin: 0 8px;
+}
+
+.diet-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.diet-seg .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+/* Base colors for dots */
+.diet-seg .dot.veg { color: #28a745; }
+.diet-seg .dot.nonveg { color: #e74c3c; }
+.diet-seg .dot.neutral { color: #0ea5e9; }
+
+/* Active states: filled colored segment + white text for contrast */
+.diet-seg.active .label { color: #ffffff; }
+
+.diet-seg.active .dot { box-shadow: none; background: #ffffff; }
+
+/* Segment backgrounds per mode */
+.diet-seg.active [class~="veg"]   { background: unset; }
+.diet-seg.active [class~="nonveg"]{ background: unset; }
+.diet-seg.active [class~="neutral"]{ background: unset; }
+
+.diet-seg.active { color: #ffffff; }
+
+.diet-seg.active .dot.veg { background: #ffffff; }
+.diet-seg.active .dot.nonveg { background: #ffffff; }
+.diet-seg.active .dot.neutral { background: #ffffff; }
+
+/* Active segment background colors */
+.diet-seg.active[aria-pressed="true"] { border-color: transparent; }
+.diet-seg.active .label { font-weight: 600; }
+
+/* Use data-color derived from the dot color */
+.diet-seg.active .dot.veg ~ .label,
+.diet-seg.active .dot.veg { --seg-color: #28a745; }
+.diet-seg.active .dot.nonveg ~ .label,
+.diet-seg.active .dot.nonveg { --seg-color: #e74c3c; }
+.diet-seg.active .dot.neutral ~ .label,
+.diet-seg.active .dot.neutral { --seg-color: #0ea5e9; }
+
+.diet-seg.active {
+  background: var(--seg-color, var(--color-primary));
+}
+
+/* Dark theme borders */
+.dark-theme .diet-toggle {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+/* Active link: theme-aware text color + indicator */
+.nav-list a.active {
+  color: var(--color-primary) !important;          /* Light mode */
+  position: relative;
+}
+
+.nav-list a.active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 4px;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 2px;
+}
+
+/* Dark mode active: lighter primary for contrast */
+.dark-theme .nav-list a.active {
+  color: var(--color-primary-light) !important;
+}
+
+.dark-theme .nav-list a.active::after {
+  background: var(--color-primary-light);
+}
+
+/* Optional: make hover not override active contrast */
+.nav-list a.active:hover {
+  background: rgba(0, 0, 0, 0.06); /* Light mode subtle */
+}
+.dark-theme .nav-list a.active:hover {
+  background: rgba(255, 255, 255, 0.08); /* Dark mode subtle */
+}

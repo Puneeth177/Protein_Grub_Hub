@@ -7,6 +7,9 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 import { AvatarPickerComponent, AvatarPickerResult } from '../../components/avatar-picker/avatar-picker.component';
 import { PLATFORM_ID } from '@angular/core';
+import { getInitials } from '../../utils/image';
+
+
 
 @Component({
   selector: 'app-profile',
@@ -41,6 +44,10 @@ export class ProfileComponent implements OnInit {
     public authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
+
+  initials(name: string): string {
+    return getInitials(name);
+  }
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {

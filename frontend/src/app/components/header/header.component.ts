@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
 import { ThemeService } from '../../services/theme.service';
 import { NavAvatarComponent } from '../nav-avatar/nav-avatar.component';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { DietModeService } from '../../services/diet-mode.service';
+import type { DietMode } from '../../services/diet-mode.service';
 
 @Component({
   selector: 'app-header',
@@ -17,27 +19,52 @@ import { Observable } from 'rxjs';
 export class HeaderComponent implements OnInit {
   currentUser$: Observable<any>;
   cartItemCount$: Observable<number>;
-  isMenuOpen = false;
+
+  // Separate states
+  isNavOpen = false;
+  isUserMenuOpen = false;
 
   constructor(
     private authService: AuthService,
     private cartService: CartService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private dietMode: DietModeService
   ) {
     this.currentUser$ = this.authService.currentUser$;
     this.cartItemCount$ = this.cartService.cartItemCount$;
   }
 
-  ngOnInit() {}
+  diet: DietMode = 'neutral';
+  private modeSub?: Subscription;
 
-  toggleMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
+  ngOnInit() {
+    this.modeSub = this.dietMode.getMode$().subscribe(mode => this.diet = mode);
+  }
+
+  toggleNavMenu() {
+    this.isNavOpen = !this.isNavOpen;
+  }
+
+  toggleUserMenu(event?: Event) {
+    if (event) event.stopPropagation();
+    this.isUserMenuOpen = !this.isUserMenuOpen;
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click')
+  onDocumentClick() {
+    if (this.isUserMenuOpen) {
+      this.isUserMenuOpen = false;
+    }
   }
 
   logout() {
     this.authService.logout();
-    this.isMenuOpen = false;
+    this.isUserMenuOpen = false;
   }
+
+  setDiet(mode: DietMode) { this.dietMode.setMode(mode); }
+  cycleDiet() { this.dietMode.toggleNext(); }
 
   getCartItemCount(): Observable<number> {
     return this.cartItemCount$;
@@ -45,5 +72,9 @@ export class HeaderComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleDarkMode();
+  }
+
+  onDietModeToggle() {
+    this.cycleDiet();
   }
 }

@@ -27,30 +27,12 @@
 
 /* Theme Variables */
 :root {
-  /* Forest Green (Light) theme */
-  --light-gradient: linear-gradient(135deg, #f0f7f0 0%, #e8f5e9 100%);
-  --light-surface: #ffffff;
-  --light-text: #1b5e20;
-  --light-text-secondary: #2e7d32;
-  --light-primary: #4CAF50;
-  --light-accent: #81c784;
-  --light-border: #c8e6c9;
-  
-  /* Dark Forest theme */
-  --dark-gradient: linear-gradient(135deg, #1b3a1b 0%, #1b2e1b 100%);
-  --dark-surface: #243024;
-  --dark-text: #ffffff;
-  --dark-text-secondary: #c8e6c9;
-  --dark-primary: #66bb6a;
-  --dark-accent: #4CAF50;
-  --dark-border: #2e7d32;
-
   /* Layout System */
   --container-max-width: 1200px;
   --header-height: 64px;
   --sidebar-width: 250px;
-  --border-radius: 8px;
-  
+  --border-radius: 12px;
+
   /* Spacing System */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -58,7 +40,7 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   --space-xxl: 3rem;
-  
+
   /* Typography Scale */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -66,17 +48,18 @@
   --font-size-lg: 1.25rem;
   --font-size-xl: 1.5rem;
   --font-size-xxl: 2rem;
-  
+
   /* Z-index System */
   --z-header: 100;
   --z-modal: 200;
   --z-tooltip: 300;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 350ms ease;
 }
+
 
 /* Global styles */
 * {
@@ -91,7 +74,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  background: var(--app-background, var(--light-gradient));
+  background: var(--app-background);
   color: var(--color-text);
 }
 
@@ -131,28 +114,28 @@ button {
 
 /* Light theme button (Forest Green) */
 :not(.dark-theme) button {
-  background: var(--light-primary);
+  background: var(--color-primary);
   color: white;
   border: none;
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 :not(.dark-theme) button:hover {
-  background: var(--light-accent);
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
 }
 
 /* Dark theme button (Dark Forest) */
 .dark-theme button {
-  background: var(--dark-primary) !important;
+  background: var(--color-primary) !important;
   color: white !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .dark-theme button:hover {
-  background: var(--dark-accent) !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: var(--color-primary-dark) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 /* Enhance link visibility in dark theme */
@@ -166,13 +149,13 @@ button {
 
 /* Dark theme styles */
 .dark-theme {
-  background: var(--dark-gradient);
-  color: var(--dark-text);
+  background: var(--color-background);
+  color: var(--color-text);
 }
 
 .dark-theme body {
-  background: var(--app-background, var(--dark-gradient));
-  color: var(--dark-text);
+  background: var(--color-background);
+  color: var(--color-text);
 }
 
 /* Fix for How It Works section in dark theme */
@@ -282,14 +265,14 @@ section,
   .sm\:col-span-2 { grid-column: span 2; }
 }
 
-/* Testimonial styles */
+/* Testimonial styles (theme-aware) */
 .testimonial,
 .testimonial-card,
 .customer-testimonial,
 blockquote,
 .review {
-  background-color: var(--dark-surface) !important;
-  color: var(--dark-text) !important;
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
   border-radius: 8px !important;
   padding: 16px !important;
   margin-bottom: 16px !important;
@@ -301,10 +284,10 @@ blockquote,
 .reviewer,
 .testimonial-title,
 .customer-title {
-  background-color: var(--dark-surface) !important;
-  color: var(--dark-text) !important;
-  padding: 8px 16px !important;
-  border-radius: 4px !important;
+  background-color: transparent !important;
+  color: var(--color-text) !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
   font-weight: bold !important;
   margin-top: 8px !important;
 }
@@ -415,25 +398,9 @@ section,
 /* ===================== */
 
 /* New Relic inspired variables */
-::root {
-  --light-gradient: radial-gradient(1200px 600px at 10% 0%, #E9FBFF 0%, #F5FFFD 30%, #F7FAFF 100%);
-  --light-surface: #ffffff;
-  --light-text: #0b2239;
-  --light-text-secondary: #264861;
-  --light-primary: #00e7a7;
-  --light-accent: #00c2ff;
-  --light-border: #d9e7ef;
-
-  --dark-gradient: radial-gradient(1200px 600px at 10% 0%, #0b1c2c 0%, #0a1724 40%, #081321 100%);
-  --dark-surface: #0f2133;
-  --dark-text: #ffffff;
-  --dark-text-secondary: #c6d4e0;
-  --dark-primary: #00e7a7;
-  --dark-accent: #00c2ff;
-  --dark-border: #14324a;
-
-  --glow-strong: 0 0 0 2px rgba(0, 231, 167, 0.15), 0 8px 30px rgba(0, 231, 167, 0.25);
-  --glow-cyan: 0 0 0 2px rgba(0, 194, 255, 0.15), 0 8px 30px rgba(0, 194, 255, 0.25);
+:root {
+  --glow-strong: 0 0 0 2px rgba(0, 194, 255, 0.15), 0 8px 30px rgba(124, 77, 255, 0.25);
+  --glow-cyan: 0 0 0 2px rgba(0, 194, 255, 0.25), 0 8px 30px rgba(0, 194, 255, 0.25);
 }
 
 /* Animated accent grid overlay */
@@ -461,7 +428,7 @@ section,
 }
 
 :not(.dark-theme) button:hover {
-  background: linear-gradient(90deg, var(--light-primary), var(--light-accent));
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
   box-shadow: var(--glow-cyan);
   transform: translateY(-1px);
 }
@@ -471,7 +438,7 @@ section,
 }
 
 .dark-theme button:hover {
-  background: linear-gradient(90deg, var(--dark-primary), var(--dark-accent)) !important;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)) !important;
   box-shadow: var(--glow-cyan);
   transform: translateY(-1px);
 }
@@ -480,13 +447,13 @@ section,
 .container,
 section,
 .content-area {
-  box-shadow: 0 8px 30px rgba(0, 194, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(124, 77, 255, 0.08);
 }
 
 .dark-theme .card,
 .dark-theme .container,
 .dark-theme section {
-  box-shadow: 0 8px 30px rgba(0, 231, 167, 0.12);
+  box-shadow: 0 8px 30px rgba(0, 194, 255, 0.16);
 }
 
 .card:hover,
@@ -504,7 +471,7 @@ a::after {
   bottom: -2px;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--light-primary), var(--light-accent));
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
   transition: width 0.3s ease;
 }
 a:hover::after { width: 100%; }

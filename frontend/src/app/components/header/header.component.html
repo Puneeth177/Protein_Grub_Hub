@@ -7,12 +7,12 @@
       </a>
     </div>
 
-  <button class="mobile-menu-toggle" [attr.aria-label]="'Toggle navigation menu'" aria-controls="nav-menu" [attr.aria-expanded]="isMenuOpen" (click)="toggleMenu()">
+  <button class="mobile-menu-toggle" [attr.aria-label]="'Toggle navigation menu'" aria-controls="nav-menu" [attr.aria-expanded]="isNavOpen" (click)="toggleNavMenu()">
       <span></span>
       <span></span>
       <span></span>
     </button>
-    <nav class="nav-menu" id="nav-menu" [class.active]="isMenuOpen" [attr.aria-hidden]="!isMenuOpen">
+    <nav class="nav-menu" id="nav-menu" [class.active]="isNavOpen" [attr.aria-hidden]="!isNavOpen">
       <ul class="nav-list">
         <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
         <li><a routerLink="/meals" routerLinkActive="active">Browse Meals</a></li>
@@ -29,9 +29,25 @@
         <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
       </a>
 
+      <!-- Diet mode toggle -->
+      <div class="diet-toggle" role="group" aria-label="Diet mode">
+        <button type="button" class="diet-seg" [class.active]="diet==='veg'" (click)="setDiet('veg')" [attr.aria-pressed]="diet==='veg'" title="Veg">
+          <span class="dot veg" aria-hidden="true"></span>
+          <span class="label">Veg</span>
+        </button>
+        <button type="button" class="diet-seg" [class.active]="diet==='nonveg'" (click)="setDiet('nonveg')" [attr.aria-pressed]="diet==='nonveg'" title="Non-veg">
+          <span class="dot nonveg" aria-hidden="true"></span>
+          <span class="label">Non-veg</span>
+        </button>
+        <button type="button" class="diet-seg" [class.active]="diet==='neutral'" (click)="setDiet('neutral')" [attr.aria-pressed]="diet==='neutral'" title="Neutral">
+          <span class="dot neutral" aria-hidden="true"></span>
+          <span class="label">All</span>
+        </button>
+      </div>
+
       <ng-container *ngIf="currentUser$ | async as user; else loginButtons">
-        <div class="user-menu">
-          <button class="user-button" (click)="toggleMenu()" [attr.aria-label]="'Open user menu for ' + (user.name || user.email)">
+        <div class="user-menu" (click)="$event.stopPropagation()">
+          <button class="user-button" (click)="toggleUserMenu($event)" [attr.aria-label]="'Open user menu for ' + (user.name || user.email)" [attr.aria-expanded]="isUserMenuOpen">
             <!-- Example placement in your header -->
             <app-nav-avatar
               [avatar]="(currentUser$ | async)?.avatar"
@@ -40,9 +56,9 @@
             </app-nav-avatar>
             <span>▼</span>
           </button>
-          <div class="dropdown-menu" [class.show]="isMenuOpen">
-            <a routerLink="/profile" (click)="toggleMenu()">Profile</a>
-            <a routerLink="/orders" (click)="toggleMenu()">My Orders</a>
+          <div class="dropdown-menu" [class.show]="isUserMenuOpen">
+            <a routerLink="/profile" (click)="toggleUserMenu($event)">Profile</a>
+            <a routerLink="/orders" (click)="toggleUserMenu($event)">My Orders</a>
             <button (click)="logout()">Logout</button>
           </div>
         </div>

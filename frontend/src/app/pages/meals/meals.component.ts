@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
 import { Meal } from '../../models/meal.model';
 import { Subscription } from 'rxjs';
+import { DietModeService, DietMode } from '../../services/diet-mode.service';
 
 @Component({
   selector: 'app-meals',
@@ -55,14 +56,18 @@ export class MealsComponent implements OnInit, OnDestroy {
     { id: 'calories', label: 'Calories (Low to High)' }
   ];
 
-  constructor(private cartService: CartService) {}
   private cartSub?: Subscription;
   // map mealId -> quantity in cart
   cartMap: { [mealId: string]: number } = {};
 
-  ngOnDestroy(): void {
-    if (this.cartSub) this.cartSub.unsubscribe();
-  }
+  constructor(private cartService: CartService, private dietModeService: DietModeService) {}
+  private modeSub?: Subscription;
+  private dietMode: DietMode = 'neutral';
+
+ngOnDestroy(): void {
+  if (this.cartSub) this.cartSub.unsubscribe();
+  if (this.modeSub) this.modeSub.unsubscribe();
+}
   ngOnInit() {
     // Use static mock data for SSR compatibility
     const staticMeals = [
@@ -106,9 +111,14 @@ export class MealsComponent implements OnInit, OnDestroy {
         dietary_tags: ['vegan', 'vegetarian', 'gluten-free']
       }
     ];
+    this.modeSub = this.dietModeService.getMode$().subscribe(mode => {
+      this.dietMode = mode;
+      this.applyFilters();
+    });
     this.meals = staticMeals;
     this.filteredMeals = staticMeals;
     this.isLoading = false;
+    
     this.applyFilters();
 
     // Subscribe to cart updates so UI reflects quantities
@@ -154,6 +164,17 @@ export class MealsComponent implements OnInit, OnDestroy {
     if (this.selectedDietary.length > 0) {
       filtered = filtered.filter(meal =>
         this.selectedDietary.some(diet => meal.dietary_tags.includes(diet))
+      );
+    }
+
+    // Diet mode filter (neutral shows all)
+    if (this.dietMode === 'veg') {
+      filtered = filtered.filter(m =>
+        m.dietary_tags?.some(t => t === 'vegetarian' || t === 'vegan')
+      );
+    } else if (this.dietMode === 'nonveg') {
+      filtered = filtered.filter(m =>
+        !(m.dietary_tags?.some(t => t === 'vegetarian' || t === 'vegan'))
       );
     }
 
