@@ -25,9 +25,9 @@
           </button>
         </div>
 
-        <div class="cart-item reveal" *ngFor="let item of cartItems">
+        <div class="cart-item reveal" *ngFor="let item of cartItems; trackBy: trackByItem">
           <div class="item-image">
-            <img [src]="item.meal.image_url" [alt]="'Meal: ' + item.meal.name + '. ' + (item.meal.description || '')" />
+            <img [src]="item.meal?.image_url || 'https://via.placeholder.com/80x80?text=Meal'" [alt]="'Meal: ' + (item.meal?.name || '') + '. ' + (item.meal?.description || '')" />
           </div>
           
           <div class="item-details">
@@ -35,43 +35,37 @@
             <p class="item-description">{{ item.meal.description }}</p>
             
             <div class="item-stats">
-              <span class="stat">{{ item.meal.protein_grams }}g protein</span>
-              <span class="stat">{{ item.meal.calories }} cal</span>
-              <span class="stat" *ngIf="item.meal.dietary_tags.length > 0">
-                {{ item.meal.dietary_tags[0] }}
+              <span class="stat">{{ (item.meal?.protein_grams ?? 0) }}g protein</span>
+              <span class="stat">{{ (item.meal?.calories ?? 0) }} cal</span>
+              <span class="stat" *ngIf="item.meal?.dietary_tags?.length > 0">
+                {{ item.meal?.dietary_tags?.[0] }}
               </span>
             </div>
           </div>
           
           <div class="item-controls">
             <div class="quantity-controls">
-              <button 
-                class="quantity-btn"
-                (click)="updateQuantity(item.meal._id, item.quantity - 1)"
-              >
-                -
-              </button>
+              <button type="button" class="quantity-btn"
+                      (click)="updateQuantity(item.meal._id, item.quantity - 1, item.meal?.name)">-</button>
               <span class="quantity">{{ item.quantity }}</span>
-              <button 
-                class="quantity-btn"
-                (click)="updateQuantity(item.meal._id, item.quantity + 1)"
-              >
-                +
-              </button>
+              <button type="button" class="quantity-btn"
+                      (click)="updateQuantity(item.meal._id, item.quantity + 1, item.meal?.name)">+</button>
+
+              <button type="button" class="remove-btn"
+                      (click)="removeItem(item.meal._id, item.meal?.name)" title="Remove item">🗑️</button>
             </div>
             
             <div class="item-price">
-              <span class="unit-price">${{ item.meal.price }} each</span>
-              <span class="total-price">${{ (item.meal.price * item.quantity).toFixed(2) }}</span>
+              <span class="unit-price">₹{{ item.meal.price }} each</span>
+              <span class="total-price">₹{{ (item.meal.price * item.quantity).toFixed(2) }}</span>
             </div>
             
             <button 
+              type="button"
               class="remove-btn"
-              (click)="removeItem(item.meal._id)"
+              (click)="removeItem(item.meal._id, item.meal?.name)"
               title="Remove item"
-            >
-              🗑️
-            </button>
+            >🗑️</button>
           </div>
         </div>
       </div>
@@ -83,7 +77,7 @@
         <!-- Free Delivery Progress -->
         <div class="delivery-progress" *ngIf="!isEligibleForFreeDelivery(cartTotal)">
           <div class="progress-info">
-            <span>Add ${{ getRemainingForFreeDelivery(cartTotal).toFixed(2) }} more for free delivery!</span>
+            <span>Add ₹{{ getRemainingForFreeDelivery(cartTotal).toFixed(2) }} more for free delivery!</span>
           </div>
           <div class="progress-bar">
             <div 
@@ -101,13 +95,13 @@
         <div class="price-breakdown">
           <div class="price-row">
             <span>Subtotal</span>
-            <span>${{ getSubtotal(cartTotal).toFixed(2) }}</span>
+            <span>₹{{ getSubtotal(cartTotal).toFixed(2) }}</span>
           </div>
           
           <div class="price-row">
             <span>Delivery Fee</span>
             <span *ngIf="getDeliveryFee(cartTotal) > 0">
-              ${{ getDeliveryFee(cartTotal).toFixed(2) }}
+              ₹{{ getDeliveryFee(cartTotal).toFixed(2) }}
             </span>
             <span *ngIf="getDeliveryFee(cartTotal) === 0" class="free-text">
               FREE
@@ -116,12 +110,12 @@
           
           <div class="price-row">
             <span>Tax</span>
-            <span>${{ getTax(cartTotal).toFixed(2) }}</span>
+            <span>₹{{ getTax(cartTotal).toFixed(2) }}</span>
           </div>
           
           <div class="price-row total-row">
             <span>Total</span>
-            <span>${{ getFinalTotal(cartTotal).toFixed(2) }}</span>
+            <span>₹{{ getFinalTotal(cartTotal).toFixed(2) }}</span>
           </div>
         </div>
         

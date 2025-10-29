@@ -93,7 +93,7 @@
             </div>
             <div class="summary-row total">
               <span>Total Amount:</span>
-              <span>${{ order.total.toFixed(2) }}</span>
+              <span>₹{{ order.total.toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -176,8 +176,8 @@
                   </div>
                 </div>
                 <div class="item-price">
-                  <span class="unit-price">${{ item.meal.price }} each</span>
-                  <span class="total-price">${{ (item.meal.price * item.quantity).toFixed(2) }}</span>
+                  <span class="unit-price">₹{{ item.meal.price }} each</span>
+                  <span class="total-price">₹{{ (item.meal.price * item.quantity).toFixed(2) }}</span>
                 </div>
               </div>
             </div>
@@ -188,20 +188,20 @@
             <div class="price-breakdown">
               <div class="price-row">
                 <span>Subtotal:</span>
-                <span>${{ selectedOrder.subtotal.toFixed(2) }}</span>
+                <span>₹{{ selectedOrder.subtotal.toFixed(2) }}</span>
               </div>
               <div class="price-row">
                 <span>Delivery Fee:</span>
-                <span *ngIf="selectedOrder.deliveryFee > 0">${{ selectedOrder.deliveryFee.toFixed(2) }}</span>
+                <span *ngIf="selectedOrder.deliveryFee > 0">₹{{ selectedOrder.deliveryFee.toFixed(2) }}</span>
                 <span *ngIf="selectedOrder.deliveryFee === 0" class="free-text">FREE</span>
               </div>
               <div class="price-row">
                 <span>Tax:</span>
-                <span>${{ selectedOrder.tax.toFixed(2) }}</span>
+                <span>₹{{ selectedOrder.tax.toFixed(2) }}</span>
               </div>
               <div class="price-row total-row">
                 <span>Total:</span>
-                <span>${{ selectedOrder.total.toFixed(2) }}</span>
+                <span>₹{{ selectedOrder.total.toFixed(2) }}</span>
               </div>
             </div>
 

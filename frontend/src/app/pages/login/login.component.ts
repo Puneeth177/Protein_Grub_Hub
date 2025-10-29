@@ -34,7 +34,6 @@ export class LoginComponent {
         win.google.accounts.id.initialize({
           client_id: environment.googleClientId,
           callback: (response: any) => this.handleCredentialResponse(response),
-          hosted_domain: environment.appUrl,
           auto_select: false
         });
 

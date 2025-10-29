@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/meals/meals.component').then(m => m.MealsComponent)
   },
   {
+    path: 'payment/:orderId',
+    loadComponent: () => import('./pages/payment/payment').then(m => m.Payment),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

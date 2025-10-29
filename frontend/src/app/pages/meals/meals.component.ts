@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-// import { ApiService } from '../../services/api.service';
+import { ApiService } from '../../services/api.service';
 import { CartService } from '../../services/cart.service';
 import { Meal } from '../../models/meal.model';
 import { Subscription } from 'rxjs';
@@ -26,7 +26,7 @@ export class MealsComponent implements OnInit, OnDestroy {
   minProtein = 0;
   maxProtein = 100;
   minPrice = 0;
-  maxPrice = 50;
+  maxPrice = 500;
   selectedDietary: string[] = [];
   sortBy = 'name';
   
@@ -57,10 +57,10 @@ export class MealsComponent implements OnInit, OnDestroy {
   ];
 
   private cartSub?: Subscription;
-  // map mealId -> quantity in cart
-  cartMap: { [mealId: string]: number } = {};
+  // map of client mealId and name-based keys to quantity in cart
+  cartMap: { [key: string]: number } = {};
 
-  constructor(private cartService: CartService, private dietModeService: DietModeService) {}
+  constructor(private cartService: CartService, private dietModeService: DietModeService, private apiService: ApiService) {}
   private modeSub?: Subscription;
   private dietMode: DietMode = 'neutral';
 
@@ -69,65 +69,56 @@ ngOnDestroy(): void {
   if (this.modeSub) this.modeSub.unsubscribe();
 }
   ngOnInit() {
-    // Use static mock data for SSR compatibility
-    const staticMeals = [
-      {
-        _id: '1',
-        name: 'Grilled Chicken Power Bowl',
-        description: 'Perfectly seasoned grilled chicken breast with quinoa, roasted vegetables, and avocado',
-        protein_grams: 45,
-        carbs_grams: 35,
-        fat_grams: 18,
-        calories: 450,
-        price: 12.99,
-        image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-        category: 'main-course',
-        dietary_tags: ['gluten-free', 'dairy-free']
-      },
-      {
-        _id: '2',
-        name: 'Salmon & Sweet Potato',
-        description: 'Wild-caught salmon with roasted sweet potato and steamed broccoli',
-        protein_grams: 40,
-        carbs_grams: 30,
-        fat_grams: 20,
-        calories: 420,
-        price: 15.99,
-        image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-        category: 'main-course',
-        dietary_tags: ['keto', 'paleo', 'gluten-free']
-      },
-      {
-        _id: '3',
-        name: 'Plant-Based Protein Stack',
-        description: 'Black bean and lentil patty with quinoa and mixed greens',
-        protein_grams: 25,
-        carbs_grams: 40,
-        fat_grams: 12,
-        calories: 350,
-        price: 10.99,
-        image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-        category: 'main-course',
-        dietary_tags: ['vegan', 'vegetarian', 'gluten-free']
-      }
-    ];
+    // Fetch meals from API
     this.modeSub = this.dietModeService.getMode$().subscribe(mode => {
       this.dietMode = mode;
       this.applyFilters();
     });
-    this.meals = staticMeals;
-    this.filteredMeals = staticMeals;
-    this.isLoading = false;
     
-    this.applyFilters();
+    // Load meals from API
+    this.apiService.getMeals().subscribe({
+      next: (meals: Meal[]) => {
+        this.meals = meals;
+        this.filteredMeals = this.meals;
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (err: any) => {
+        console.error('Error loading meals:', err);
+        this.isLoading = false;
+      }
+    });
 
     // Subscribe to cart updates so UI reflects quantities
     this.cartSub = this.cartService.cart$.subscribe(items => {
       this.cartMap = {};
       if (items && items.length) {
         items.forEach((it: any) => {
-          if (it && it.meal && it.meal._id) {
-            this.cartMap[it.meal._id] = it.quantity || 0;
+          if (it && it.meal) {
+            const qty = it.quantity || 0;
+            if (it.meal._id) {
+              this.cartMap[it.meal._id] = qty;
+            }
+            if (it.meal.name) {
+              const canon = this.aliasCanon(it.meal.name);
+              const normCanon = this.normName(canon);
+              const normRaw = this.normName(it.meal.name);
+
+              // raw and canonical name keys
+              this.cartMap[`name:${it.meal.name}`] = qty;
+              this.cartMap[`name:${canon}`] = qty;
+              this.cartMap[`norm:${normRaw}`] = qty;
+              this.cartMap[`norm:${normCanon}`] = qty;
+
+              // also map to the client-side static id when available (match either raw or canonical)
+              const clientMatch = this.meals.find(m => {
+                const mNorm = this.normName(m.name);
+                return mNorm === normCanon || mNorm === normRaw;
+              });
+              if (clientMatch) {
+                this.cartMap[clientMatch._id] = qty;
+              }
+            }
           }
         });
       }
@@ -213,25 +204,74 @@ ngOnDestroy(): void {
     // You could add a toast notification here
   }
 
-  getQuantity(mealId: string): number {
-    return this.cartMap[mealId] || 0;
+  getQuantity(mealId: string, mealName?: string): number {
+    const byId = this.cartMap[mealId];
+    if (byId) return byId;
+    if (mealName) {
+      const canon = this.aliasCanon(mealName);
+      const byName = this.cartMap[`name:${mealName}`] || this.cartMap[`name:${canon}`];
+      if (byName) return byName;
+      const byNorm = this.cartMap[`norm:${this.normName(mealName)}`] || this.cartMap[`norm:${this.normName(canon)}`];
+      if (byNorm) return byNorm;
+    }
+    return 0;
+  }
+
+  private normName(s?: string): string {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '')
+      .trim();
+  }
+
+  private aliasCanon(s?: string): string {
+    const name = String(s || '');
+    const map: Record<string, string> = {
+      'Grilled Chicken Power Bowl': 'High Protein Chicken Bowl',
+      'Salmon & Sweet Potato': 'Salmon Protein Pack',
+      'Plant-Based Protein Stack': 'Turkey Protein Wrap'
+    };
+    return map[name] || name;
   }
 
   increase(event: Event, meal: Meal) {
     event?.stopPropagation();
     event?.preventDefault();
-    this.cartService.addToCart(meal, 1);
+    const existing = this.cartService.getCartItems().find(it => {
+      const a = this.aliasCanon(this.normName(it?.meal?.name));
+      const b = this.aliasCanon(this.normName(meal.name));
+      return a === b;
+    });
+
+    if (existing?.meal?._id) {
+      const current = this.getQuantity(meal._id, meal.name);
+      this.cartService.updateQuantity(existing.meal._id, current + 1, undefined, meal.name);
+    } else {
+      this.cartService.addToCart(meal, 1);
+    }
   }
 
   decrease(event: Event, meal: Meal) {
     event?.stopPropagation();
     event?.preventDefault();
-    const current = this.getQuantity(meal._id);
+    const current = this.getQuantity(meal._id, meal.name);
+    const existing = this.cartService.getCartItems().find(it => {
+      const a = this.aliasCanon(this.normName(it?.meal?.name));
+      const b = this.aliasCanon(this.normName(meal.name));
+      return a === b;
+    });
+    const targetId = existing?.meal?._id || meal._id;
+
     if (current > 1) {
-      this.cartService.updateQuantity(meal._id, current - 1);
+      this.cartService.updateQuantity(targetId, current - 1, undefined, meal.name);
     } else {
-      this.cartService.removeFromCart(meal._id);
+      this.cartService.removeFromCart(targetId, undefined, meal.name);
     }
+  }
+
+  trackByMeal(index: number, meal: Meal) {
+    return meal?._id || meal?.name || index;
   }
 
   clearFilters() {
@@ -251,7 +291,7 @@ ngOnDestroy(): void {
     if (this.searchTerm) count++;
     if (this.selectedCategory) count++;
     if (this.minProtein > 0 || this.maxProtein < 100) count++;
-    if (this.minPrice > 0 || this.maxPrice < 50) count++;
+    if (this.minPrice > 0 || this.maxPrice < 500) count++;
     if (this.selectedDietary.length > 0) count++;
     return count;
   }

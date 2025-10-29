@@ -130,6 +130,31 @@ export class ApiService {
     };
   }
 
+  // Payment Methods
+  createPaymentIntent(paymentData: { orderId: string; amount: number; currency: string; paymentMethod: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/payments/create-intent`, paymentData).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPayment(paymentId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/payments/${paymentId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  requestRefund(paymentId: string, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/payments/refund`, { paymentId, reason }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getOrder(orderId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/orders/${orderId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   /**
    * A generic and private error handler for HTTP requests.
    */

@@ -23,14 +23,14 @@
     </nav>
 
     <div class="nav-actions">
-      <!-- Cart icon visible for all users (guest or authenticated). Count comes from CartService -->
-      <a routerLink="/cart" class="cart-icon">
+      <!-- Cart icon visible only for authenticated users -->
+      <a routerLink="/cart" class="cart-icon" *ngIf="currentUser$ | async">
         🛒
         <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
       </a>
 
-      <!-- Diet mode toggle -->
-      <div class="diet-toggle" role="group" aria-label="Diet mode">
+      <!-- Diet mode toggle visible only for authenticated users -->
+      <div class="diet-toggle" role="group" aria-label="Diet mode" *ngIf="currentUser$ | async">
         <button type="button" class="diet-seg" [class.active]="diet==='veg'" (click)="setDiet('veg')" [attr.aria-pressed]="diet==='veg'" title="Veg">
           <span class="dot veg" aria-hidden="true"></span>
           <span class="label">Veg</span>

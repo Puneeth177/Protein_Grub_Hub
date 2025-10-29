@@ -9,7 +9,8 @@ const productSchema = new mongoose.Schema({
     calories: { type: Number, required: true },
     carbs: { type: Number, required: true },
     fat: { type: Number, required: true },
-    inventory: { type: Number, default: 0 }
+    inventory: { type: Number, default: 0 },
+    image_url: { type: String }
 });
 
 module.exports = mongoose.model('Product', productSchema);

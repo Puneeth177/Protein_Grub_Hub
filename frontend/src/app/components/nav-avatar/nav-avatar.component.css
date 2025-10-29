@@ -51,12 +51,12 @@
 }
 
 .dark-theme .nav-avatar {
-  background: rgba(172, 195, 73, 0.14) !important;
+  background: rgba(24, 205, 242, 0.14);
   border-color: var(--color-border);
 }
 
 /* styles/themes.css */
 .avatar-initials {
-  background: rgba(236, 34, 16, 0.14) !important;
-  color: var(--color-text) !important;
+  background: rgba(4, 232, 236, 0.14);
+  color: var(--color-text);
 }

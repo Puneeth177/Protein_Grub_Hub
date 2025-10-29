@@ -75,6 +75,20 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 .error-message {
@@ -176,10 +190,26 @@
   color: var(--color-text-secondary);
 }
 
-/* Ensure rendered Google button centers */
+/* Ensure rendered Google button centers and matches Sign In button width */
 #google-signin-button {
-  display: flex;
+  display: flex !important;
   justify-content: center;
   align-items: center;
-  margin: 0 auto;            /* fallback centering */
+  margin: 0 auto;
+  width: 100% !important;
+}
+
+#google-signin-button *,
+#google-signin-button > div,
+#google-signin-button > div > div,
+#google-signin-button div[role="button"],
+#google-signin-button button,
+#google-signin-button [role="button"],
+#google-signin-button iframe,
+#google-signin-button .abcRioButton,
+#google-signin-button .abcRioButtonContents {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important;
 }

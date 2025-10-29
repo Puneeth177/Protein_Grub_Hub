@@ -4,7 +4,8 @@
     <p>Complete your order and get your protein-rich meals delivered</p>
   </div>
 
-  <div class="checkout-content" *ngIf="!loading && !error">
+  <!-- Form content (hidden after success) -->
+  <div class="checkout-content" *ngIf="!loading && !error && !orderComplete">
     <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()" class="checkout-form">
       <!-- Delivery Address -->
       <div class="form-section">
@@ -73,19 +74,19 @@
         <div class="order-summary">
           <div class="summary-row">
             <span>Subtotal:</span>
-            <span>{{ subtotal | currency }}</span>
+            <span>₹{{ subtotal.toFixed(2) }}</span>
           </div>
           <div class="summary-row">
             <span>Tax ({{ (taxRate * 100) | number:'1.0-0' }}%):</span>
-            <span>{{ tax | currency }}</span>
+            <span>₹{{ tax.toFixed(2) }}</span>
           </div>
           <div class="summary-row">
             <span>Delivery Fee:</span>
-            <span>{{ deliveryFee | currency }}</span>
+            <span>₹{{ deliveryFee.toFixed(2) }}</span>
           </div>
           <div class="summary-row total">
             <span>Total:</span>
-            <span>{{ total | currency }}</span>
+            <span>₹{{ total.toFixed(2) }}</span>
           </div>
         </div>
       </div>
@@ -114,11 +115,11 @@
   </div>
 
   <!-- Success State -->
-  <div class="success-state" *ngIf="orderComplete">
+  <div class="success-state" *ngIf="orderComplete" id="order-success">
     <h2>Order Placed Successfully!</h2>
     <p>Your order #{{ orderId }} has been confirmed.</p>
     <p>You will receive an email confirmation shortly.</p>
-    <button class="btn btn-primary" routerLink="/orders">View Order Status</button>
+    <button class="btn btn-primary" [routerLink]="['/orders', orderId]">View Order Status</button>
     <button class="btn btn-outline" routerLink="/meals">Continue Shopping</button>
   </div>
 </div>

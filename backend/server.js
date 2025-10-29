@@ -1,18 +1,34 @@
 require('dotenv').config();  // Load environment variables from .env
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const connectDB = require('./utils/db');
 const path = require('path');
+const DeliverySocketHandler = require('./sockets/delivery-socket');
 
 // Initialize express app
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
+        credentials: true
+    }
+});
+
+// Initialize delivery socket handler
+const deliverySocketHandler = new DeliverySocketHandler(io);
+app.set('deliverySocketHandler', deliverySocketHandler);
 
 // Connect to MongoDB
 connectDB();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:52023'],
+    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
     credentials: true
 }));
 app.use(express.json());
@@ -30,9 +46,13 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/email', require('./routes/email'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/webhooks', require('./routes/webhooks'));
+app.use('/api/delivery', require('./routes/delivery'));
 
 // Serve static files from the Angular app
-app.use(express.static(path.join(__dirname, 'frontend/dist/frontend')));
+app.use(express.static(path.join(__dirname, '../frontend/dist/frontend')));
 
 // API Health check
 app.get('/api', (req, res) => {
@@ -41,7 +61,7 @@ app.get('/api', (req, res) => {
 
 // Handle Angular routing
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/dist/frontend/index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/dist/frontend/index.html'));
 });
 
 // Error handling middleware
@@ -52,6 +72,7 @@ app.use((err, req, res, next) => {
 
 // Server Initialization
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Socket.IO is ready for real-time delivery tracking`);
 });

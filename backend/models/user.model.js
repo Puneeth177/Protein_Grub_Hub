@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema({
         url: { type: String }
     },
 
+    // Email verification
+    emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
+
     proteinGoal: { type: Number },
     onboardingCompleted: { type: Boolean, default: false },
     fitnessGoal: { type: String },

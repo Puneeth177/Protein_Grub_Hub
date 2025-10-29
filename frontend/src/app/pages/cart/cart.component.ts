@@ -16,9 +16,9 @@ export class CartComponent implements OnInit {
   cartTotal$: Observable<number>;
   cartItemCount$: Observable<number>;
   
-  deliveryFee = 5.99;
-  freeDeliveryThreshold = 50;
-  taxRate = 0.08; // 8% tax
+  deliveryFee = 49;
+  freeDeliveryThreshold = 500;
+  taxRate = 0.05; // 5% GST
 
   constructor(private cartService: CartService) {
     this.cartItems$ = this.cartService.cartItems$;
@@ -28,16 +28,16 @@ export class CartComponent implements OnInit {
 
   ngOnInit() {}
 
-  updateQuantity(itemId: string, quantity: number) {
+  updateQuantity(itemId: string, quantity: number, mealName?: string) {
     if (quantity <= 0) {
-      this.removeItem(itemId);
+      this.removeItem(itemId, mealName);
     } else {
-      this.cartService.updateQuantity(itemId, quantity);
+      this.cartService.updateQuantity(itemId, quantity, undefined, mealName);
     }
   }
 
-  removeItem(itemId: string) {
-    this.cartService.removeFromCart(itemId);
+  removeItem(itemId: string, mealName?: string) {
+    this.cartService.removeFromCart(itemId, undefined, mealName);
   }
 
   clearCart() {
@@ -72,10 +72,14 @@ export class CartComponent implements OnInit {
   }
 
   getTotalProtein(cartItems: any[]): number {
-    return cartItems.reduce((total, item) => total + (item.meal.protein_grams * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + (((item?.meal?.protein_grams) ?? 0) * (item?.quantity ?? 0)), 0);
   }
 
   getTotalCalories(cartItems: any[]): number {
-    return cartItems.reduce((total, item) => total + (item.meal.calories * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + (((item?.meal?.calories) ?? 0) * (item?.quantity ?? 0)), 0);
+  }
+
+  trackByItem(index: number, item: any) {
+    return item?.meal?._id || item?.meal?.name || index;
   }
 }

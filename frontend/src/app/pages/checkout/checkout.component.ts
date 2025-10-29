@@ -15,9 +15,9 @@ import { DeliveryAddress, CartItem } from '../../models/order.model';
   styleUrls: ['./checkout.component.css']
 })
 export class CheckoutComponent implements OnInit {
-  readonly taxRate = 0.08; // 8% tax
-  readonly baseDeliveryFee = 5.99;
-  readonly freeDeliveryThreshold = 50;
+  readonly taxRate = 0.05; // 5% GST
+  readonly baseDeliveryFee = 49;
+  readonly freeDeliveryThreshold = 500;
 
   checkoutForm: FormGroup;
   cartItems: CartItem[] = [];
@@ -131,12 +131,24 @@ export class CheckoutComponent implements OnInit {
         paymentMethod: formValue.paymentMethod
       };
 
-      const order = await firstValueFrom(this.orderService.createOrder(orderData));
+      const response: any = await firstValueFrom(this.orderService.createOrder(orderData));
+      console.log('Order created:', response);
+      
+      // Extract order ID from response (backend returns {message, order})
+      const order = response.order || response;
       this.orderId = order._id;
+      
+      if (!this.orderId) {
+        console.error('Order response:', response);
+        throw new Error('Order created but no ID returned');
+      }
+      
+      // Clear cart
       await this.cartService.clearCart();
-      this.orderComplete = true;
-      // Clear any stored return URLs
-      localStorage.removeItem('returnUrl');
+      
+      // Redirect to payment page
+      console.log('Navigating to payment with order ID:', this.orderId);
+      this.router.navigate(['/payment', this.orderId]);
 
     } catch (error: any) {
       console.error('Error creating order:', error);

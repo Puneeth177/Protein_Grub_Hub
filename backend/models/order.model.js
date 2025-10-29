@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    orderNumber: { type: Number, unique: true, sparse: true },
     items: [{
         meal: {
             _id: { type: String, required: true },
@@ -33,6 +34,24 @@ const orderSchema = new mongoose.Schema({
     },
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now }
+});
+
+// Pre-save hook to auto-increment orderNumber
+orderSchema.pre('save', async function(next) {
+    if (this.isNew && !this.orderNumber) {
+        try {
+            // Find the highest order number
+            const lastOrder = await mongoose.model('Order').findOne({}, { orderNumber: 1 })
+                .sort({ orderNumber: -1 })
+                .limit(1);
+            
+            // Set order number to last + 1, or 1 if no orders exist
+            this.orderNumber = lastOrder && lastOrder.orderNumber ? lastOrder.orderNumber + 1 : 1;
+        } catch (error) {
+            return next(error);
+        }
+    }
+    next();
 });
 
 module.exports = mongoose.model('Order', orderSchema);

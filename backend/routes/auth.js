@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user.model');
 const auth = require('../middleware/auth');
+const { sendMail } = require('../services/email/emailService');
+const templates = require('../services/email/templates');
 
 // Register user
 router.post('/register', [
@@ -52,6 +55,29 @@ router.post('/register', [
 
         await user.save();
 
+        // Create email verification token and send email (non-Google signup)
+        try {
+            const token = crypto.randomBytes(32).toString('hex');
+            user.emailVerificationToken = token;
+            user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+            await user.save();
+
+            const verifyUrlBase = process.env.FRONTEND_URL || 'http://localhost:4201';
+            const verifyUrl = `${verifyUrlBase}/verify-email?token=${token}`;
+            const firstName = user.name?.split(' ')[0] || 'there';
+            const vars = { firstName, verifyUrl, expiresInHours: 24 };
+            const subject = templates.verifyEmail.subject;
+            const html = templates.verifyEmail.html(vars);
+            const text = templates.verifyEmail.text(vars);
+            if (user.email) {
+                sendMail({ to: user.email, subject, html, text }).catch(e => {
+                    console.error('Verification email send failed:', e.message);
+                });
+            }
+        } catch (e) {
+            console.error('Register: verification email error:', e.message);
+        }
+
         // Create and return JWT token
         const token = jwt.sign(
             { userId: user._id },
@@ -97,6 +123,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        if (!user.emailVerified) {
+            return res.status(403).json({ message: 'Please verify your email before logging in' });
+        }
+
         // Create and send token
         const token = jwt.sign(
             { userId: user._id },
@@ -130,16 +160,20 @@ router.post('/login', async (req, res) => {
 });
 
 // Google Sign-In (ID token verification)
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID_WEB || process.env.GOOGLE_CLIENT_ID);
 
 router.post('/google', async (req, res) => {
     try {
-        const { idToken } = req.body;
-        if (!idToken) return res.status(400).json({ message: 'Missing idToken' });
+        const { idToken, credential } = req.body;
+        const googleIdToken = idToken || credential;
+        if (!googleIdToken) {
+            return res.status(400).json({ message: 'Missing idToken' });
+        }
 
+        const audience = process.env.GOOGLE_CLIENT_ID_WEB || process.env.GOOGLE_CLIENT_ID;
         const ticket = await googleClient.verifyIdToken({
-            idToken,
-            audience: process.env.GOOGLE_CLIENT_ID
+            idToken: googleIdToken,
+            audience
         });
 
         const payload = ticket.getPayload();
@@ -267,6 +301,56 @@ router.put('/profile', auth, async (req, res) => {
     } catch (error) {
         console.error('Profile update error:', error);
         res.status(500).json({ message: 'Server error during profile update' });
+    }
+});
+
+// Resend verification email
+router.post('/verify/resend', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (user.googleId) return res.status(400).json({ message: 'Google accounts are already verified' });
+        if (user.emailVerified) return res.status(400).json({ message: 'Email already verified' });
+
+        const token = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = token;
+        user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await user.save();
+
+        const verifyUrlBase = process.env.FRONTEND_URL || 'http://localhost:4201';
+        const verifyUrl = `${verifyUrlBase}/verify-email?token=${token}`;
+        const firstName = user.name?.split(' ')[0] || 'there';
+        const vars = { firstName, verifyUrl, expiresInHours: 24 };
+        const subject = templates.verifyEmail.subject;
+        const html = templates.verifyEmail.html(vars);
+        const text = templates.verifyEmail.text(vars);
+        await sendMail({ to: user.email, subject, html, text });
+        res.json({ message: 'Verification email sent' });
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ message: 'Failed to resend verification email' });
+    }
+});
+
+// Verify email token
+router.get('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) return res.status(400).json({ message: 'Verification token is required' });
+        const user = await User.findOne({ emailVerificationToken: token, emailVerificationExpires: { $gt: new Date() } });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired verification token' });
+        }
+        user.emailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save();
+        res.json({ message: 'Email verified successfully' });
+    } catch (error) {
+        console.error('Verify email error:', error);
+        res.status(500).json({ message: 'Failed to verify email' });
     }
 });
 

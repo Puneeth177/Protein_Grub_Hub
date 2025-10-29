@@ -1,0 +1,114 @@
+<div class="payment-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading payment details...</p>
+  </div>
+
+  <!-- Payment Form -->
+  <div *ngIf="!isLoading" class="payment-card">
+    <div class="payment-header">
+      <h1>Complete Your Payment</h1>
+      <p>Secure payment powered by Stripe</p>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary" *ngIf="orderDetails">
+      <h3>Order Summary</h3>
+      <div class="summary-row">
+        <span>Order ID:</span>
+        <span><strong>#{{ orderId }}</strong></span>
+      </div>
+      <div class="summary-row">
+        <span>Items:</span>
+        <span>{{ orderDetails.items?.length || 0 }} items</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total Amount:</span>
+        <span><strong>₹{{ (orderDetails.total || orderDetails.totalAmount)?.toFixed(2) }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Payment Method Selection -->
+    <div class="payment-methods">
+      <h3>Select Payment Method</h3>
+      <div class="method-buttons">
+        <button 
+          type="button"
+          class="method-btn"
+          [class.active]="selectedPaymentMethod === 'card'"
+          (click)="selectPaymentMethod('card')">
+          <span class="icon">💳</span>
+          <span>Card Payment</span>
+        </button>
+        <button 
+          type="button"
+          class="method-btn"
+          [class.active]="selectedPaymentMethod === 'upi'"
+          (click)="selectPaymentMethod('upi')">
+          <span class="icon">📱</span>
+          <span>UPI Payment</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card Payment Form -->
+    <div *ngIf="selectedPaymentMethod === 'card'" class="payment-form">
+      <h3>Enter Card Details</h3>
+      <div class="card-input-wrapper">
+        <div id="card-element" class="card-element"></div>
+      </div>
+      <p class="secure-note">🔒 Your card details are secure and encrypted</p>
+    </div>
+
+    <!-- UPI Payment -->
+    <div *ngIf="selectedPaymentMethod === 'upi'" class="upi-payment">
+      <h3>Pay with UPI</h3>
+      <div class="upi-details">
+        <p><strong>UPI ID:</strong> {{ merchantUpiId }}</p>
+        <p><strong>Merchant:</strong> {{ merchantName }}</p>
+        <p class="upi-note">Scan the QR code below or use the UPI ID to make payment</p>
+      </div>
+      <div class="upi-qr" *ngIf="showUpiQr">
+        <div class="qr-placeholder">
+          <p style="font-size: 18px; margin-bottom: 10px;">📱 UPI QR Code</p>
+          <p class="small" style="font-size: 16px; margin-bottom: 20px;">Scan to pay ₹{{ (orderDetails?.total || orderDetails?.totalAmount)?.toFixed(2) }}</p>
+          <div class="qr-box" *ngIf="upiQrCodeUrl">
+            <img [src]="upiQrCodeUrl" alt="UPI QR Code" style="display: block; max-width: 100%;">
+          </div>
+          <p class="small" style="margin-top: 20px; font-size: 15px; line-height: 1.8;">
+            <strong>Amount:</strong> ₹{{ (orderDetails?.total || orderDetails?.totalAmount)?.toFixed(2) }}<br>
+            <strong>Order ID:</strong> {{ orderId }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message" role="alert">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="success-message" role="alert">
+      ✅ {{ successMessage }}
+    </div>
+
+    <!-- Submit Button -->
+    <button 
+      type="button"
+      class="btn btn-primary btn-full"
+      [disabled]="isProcessing || !clientSecret"
+      (click)="submitPayment()">
+      <span *ngIf="!isProcessing">Pay ₹{{ (orderDetails?.total || orderDetails?.totalAmount)?.toFixed(2) }}</span>
+      <span *ngIf="isProcessing">Processing...</span>
+    </button>
+
+    <!-- Security Badges -->
+    <div class="security-badges">
+      <span class="badge">🔒 SSL Secured</span>
+      <span class="badge">✓ PCI Compliant</span>
+      <span class="badge">💳 Stripe Powered</span>
+    </div>
+  </div>
+</div>

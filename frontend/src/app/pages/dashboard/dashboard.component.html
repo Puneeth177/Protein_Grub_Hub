@@ -86,7 +86,7 @@
             <h4>{{ meal.name }}</h4>
             <div class="meal-stats">
               <span>{{ meal.protein_grams }}g protein</span>
-              <span>${{ meal.price }}</span>
+              <span>₹{{ meal.price }}</span>
             </div>
           </div>
           <a [routerLink]="['/meals', meal._id]" class="btn btn-outline btn-sm">View</a>
