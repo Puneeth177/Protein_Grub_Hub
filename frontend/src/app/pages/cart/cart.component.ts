@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { CartService } from '../../services/cart.service';
 
@@ -20,13 +20,15 @@ export class CartComponent implements OnInit {
   freeDeliveryThreshold = 500;
   taxRate = 0.05; // 5% GST
 
-  constructor(private cartService: CartService) {
+  constructor(private cartService: CartService, private router: Router) {
     this.cartItems$ = this.cartService.cartItems$;
     this.cartTotal$ = this.cartService.cartTotal$;
     this.cartItemCount$ = this.cartService.cartItemCount$;
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    try { this.cartService.refreshFromServer(); } catch {}
+  }
 
   updateQuantity(itemId: string, quantity: number, mealName?: string) {
     if (quantity <= 0) {
@@ -81,5 +83,28 @@ export class CartComponent implements OnInit {
 
   trackByItem(index: number, item: any) {
     return item?.meal?._id || item?.meal?.name || index;
+  }
+
+  // Stock helpers
+  isOutOfStock(item: any): boolean {
+    const inv = Number(item?.meal?.inventory);
+    if (!Number.isFinite(inv)) return false; // unknown stock -> do not block
+    return inv <= 0;
+  }
+
+  exceedsStock(item: any): boolean {
+    const inv = Number(item?.meal?.inventory);
+    const qty = Number(item?.quantity ?? 0);
+    if (!Number.isFinite(inv)) return false; // unknown stock -> do not block
+    return inv > 0 && qty > inv;
+  }
+
+  hasStockIssue(items: any[]): boolean {
+    return Array.isArray(items) && items.some(it => this.isOutOfStock(it) || this.exceedsStock(it));
+  }
+
+  proceedToCheckout(items: any[]) {
+    if (this.hasStockIssue(items)) return;
+    this.router.navigate(['/checkout']);
   }
 }

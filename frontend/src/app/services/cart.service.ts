@@ -13,7 +13,12 @@ export class CartService {
   private cartItems: CartItem[] = [];
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   private readonly apiUrl = environment.apiUrl?.trim() || 'http://localhost:3000/api';
-  
+
+  // Public method to force-refresh cart from server
+  refreshFromServer(): void {
+    this.fetchCartFromServer();
+  }
+
   public cart$ = this.cartSubject.asObservable();
   public cartItems$ = this.cartSubject.asObservable();
   public cartTotal$ = this.cartSubject.pipe(

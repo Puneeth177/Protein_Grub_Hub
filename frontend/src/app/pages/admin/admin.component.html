@@ -1,0 +1,163 @@
+<div class="admin-container reveal">
+  <div class="header">
+    <h1>Admin Panel</h1>
+    <button class="btn btn-outline" (click)="reload()" [disabled]="isLoading">{{ isLoading ? 'Refreshing…' : 'Refresh' }}</button>
+  </div>
+
+  <!-- Orders: full width row -->
+  <section class="card orders">
+      <div class="card-header">
+        <h2>Orders</h2>
+        <p>Update order shipping/status</p>
+      </div>
+      <div class="toolbar">
+        <input class="input" placeholder="Search by #ID or status" [(ngModel)]="orderQuery" />
+      </div>
+      <div class="table-wrap" *ngIf="orders?.length; else noOrders">
+        <table class="table compact">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of filteredOrders; trackBy: trackById">
+              <td>{{ o._id }}</td>
+              <td>{{ (o.created || o.createdAt) | date:'short' }}</td>
+              <td>
+                <select class="select" [(ngModel)]="o.status">
+                  <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                </select>
+              </td>
+              <td>₹{{ o.total || o.totalAmount }}</td>
+              <td>
+                <button class="btn btn-primary btn-sm" (click)="updateOrderStatus(o._id, o.status)" [disabled]="savingOrderId===o._id">
+                  {{ savingOrderId===o._id ? 'Saving…' : 'Update' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pager" *ngIf="orders.length > pageSize">
+          <button class="btn btn-outline btn-sm" (click)="prevOrderPage()" [disabled]="orderPage===1">Prev</button>
+          <span class="muted">Page {{ orderPage }}</span>
+          <button class="btn btn-outline btn-sm" (click)="nextOrderPage()" [disabled]="filteredOrders.length < pageSize">Next</button>
+        </div>
+      </div>
+      <ng-template #noOrders>
+        <div class="empty">No orders yet.</div>
+      </ng-template>
+  </section>
+
+  <!-- Inventory: full width row -->
+  <section class="card inventory">
+      <div class="card-header">
+        <h2>Inventory</h2>
+        <p>Adjust stock levels</p>
+      </div>
+      <div class="toolbar">
+        <input class="input" placeholder="Search products by name or category" [(ngModel)]="productQuery" />
+      </div>
+      <div class="table-wrap" *ngIf="products?.length; else noProducts">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Protein</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Save</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of filteredProducts; trackBy: trackById">
+              <td class="product-cell">
+                <img [src]="p.image_url" [alt]="p.name" />
+                <div>
+                  <div class="name">{{ p.name }}</div>
+                  <div class="muted">{{ p.category }}</div>
+                </div>
+              </td>
+              <td>{{ p.protein_grams }}g</td>
+              <td>₹{{ p.price }}</td>
+              <td>
+                <input class="input stock" type="number" [ngModel]="p.inventory || 0" (ngModelChange)="p.inventory = $event" />
+              </td>
+              <td>
+                <button class="btn btn-primary btn-sm" (click)="updateStock(p, p.inventory || 0)" [disabled]="savingProductId===p._id">
+                  {{ savingProductId===p._id ? 'Saving…' : 'Save' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pager" *ngIf="products.length > pageSize">
+          <button class="btn btn-outline btn-sm" (click)="prevProductPage()" [disabled]="productPage===1">Prev</button>
+          <span class="muted">Page {{ productPage }}</span>
+          <button class="btn btn-outline btn-sm" (click)="nextProductPage()" [disabled]="filteredProducts.length < pageSize">Next</button>
+        </div>
+      </div>
+      <ng-template #noProducts>
+        <div class="empty">No products found.</div>
+      </ng-template>
+  </section>
+
+  <!-- Products: full width row -->
+  <section class="card products">
+      <div class="card-header">
+        <h2>Products</h2>
+        <p>Add or remove items from catalog</p>
+      </div>
+
+      <form class="form" (ngSubmit)="createProduct()">
+        <div class="form-grid">
+          <input class="input" placeholder="Name" [(ngModel)]="newProduct.name" name="name" required />
+          <input class="input" placeholder="Category" [(ngModel)]="newProduct.category" name="category" />
+          <input class="input" type="number" min="0" placeholder="Price (₹)" [(ngModel)]="newProduct.price" name="price" />
+          <input class="input" type="number" min="0" placeholder="Protein (g)" [(ngModel)]="newProduct.protein" name="protein" />
+          <input class="input" type="number" min="0" placeholder="Calories" [(ngModel)]="newProduct.calories" name="calories" />
+          <input class="input" type="number" min="0" placeholder="Carbs" [(ngModel)]="newProduct.carbs" name="carbs" />
+          <input class="input" type="number" min="0" placeholder="Fat" [(ngModel)]="newProduct.fat" name="fat" />
+          <input class="input" type="number" min="0" placeholder="Inventory" [(ngModel)]="newProduct.inventory" name="inventory" />
+          <input class="input" placeholder="Image URL" [(ngModel)]="newProduct.image_url" name="image_url" />
+          <label class="file">
+            <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+            <span>Upload Image</span>
+          </label>
+        </div>
+        <textarea class="textarea" rows="3" placeholder="Description" [(ngModel)]="newProduct.desc" name="desc"></textarea>
+        <div>
+          <div class="muted" style="margin-bottom:6px;">Dietary Tags</div>
+          <div class="tags">
+            <span class="tag" *ngFor="let t of newProduct.dietary_tags" (click)="removeTag(t)">{{ t }} ✕</span>
+          </div>
+          <div class="tag-add">
+            <input class="input" placeholder="Add tag" [(ngModel)]="addTagInput" name="addTagInput" />
+            <button type="button" class="btn btn-outline btn-sm" (click)="addTag()">Add</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" [disabled]="creating">{{ creating ? 'Creating…' : 'Create Product' }}</button>
+        </div>
+      </form>
+
+      <div class="delete-list" *ngIf="products?.length">
+        <h3>Delete Product</h3>
+        <div class="delete-row" *ngFor="let p of filteredProducts; trackBy: trackById">
+          <span class="name">{{ p.name }}</span>
+          <button class="btn btn-outline btn-sm" (click)="deleteProduct(p._id)">Delete</button>
+        </div>
+      </div>
+  </section>
+
+  <!-- Toasts -->
+  <div class="toasts">
+    <div class="toast" *ngFor="let t of toasts" [class.success]="t.type==='success'" [class.error]="t.type==='error'">
+      {{ t.text }}
+    </div>
+  </div>
+</div>

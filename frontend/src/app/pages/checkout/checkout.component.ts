@@ -143,12 +143,17 @@ export class CheckoutComponent implements OnInit {
         throw new Error('Order created but no ID returned');
       }
       
-      // Clear cart
-      await this.cartService.clearCart();
-      
-      // Redirect to payment page
-      console.log('Navigating to payment with order ID:', this.orderId);
-      this.router.navigate(['/payment', this.orderId]);
+      // Do not clear cart here; clear only after successful payment (handled server-side)
+
+      // Redirect based on payment method
+      if (formValue.paymentMethod === 'cash') {
+        // Cash on Delivery: show success page directly
+        this.router.navigate(['/order-success', this.orderId]);
+      } else {
+        // Online payment: go to payment page
+        console.log('Navigating to payment with order ID:', this.orderId);
+        this.router.navigate(['/payment', this.orderId]);
+      }
 
     } catch (error: any) {
       console.error('Error creating order:', error);

@@ -10,4 +10,6 @@ export interface Meal {
   image_url: string;
   category?: string;
   dietary_tags: string[];
+  inventory?: number;
+  tags?: string[];
 }

@@ -31,6 +31,12 @@ app.use(cors({
     origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
     credentials: true
 }));
+
+// Stripe webhooks must receive the raw body; mount before JSON parsing
+app.use('/api/webhooks', require('./routes/webhooks'));
+// Razorpay webhooks also require raw body; mount before JSON parsing
+app.use('/api/webhooks/razorpay', require('./routes/razorpay-webhook'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -48,7 +54,6 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/email', require('./routes/email'));
 app.use('/api/payments', require('./routes/payments'));
-app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/delivery', require('./routes/delivery'));
 
 // Serve static files from the Angular app

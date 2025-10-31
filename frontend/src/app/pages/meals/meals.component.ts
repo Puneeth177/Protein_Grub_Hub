@@ -7,6 +7,7 @@ import { CartService } from '../../services/cart.service';
 import { Meal } from '../../models/meal.model';
 import { Subscription } from 'rxjs';
 import { DietModeService, DietMode } from '../../services/diet-mode.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-meals',
@@ -16,6 +17,7 @@ import { DietModeService, DietMode } from '../../services/diet-mode.service';
   styleUrls: ['./meals.component.css']
 })
 export class MealsComponent implements OnInit, OnDestroy {
+
   meals: Meal[] = [];
   filteredMeals: Meal[] = [];
   isLoading = true;
@@ -43,10 +45,8 @@ export class MealsComponent implements OnInit, OnDestroy {
   dietaryOptions = [
     { id: 'vegan', label: 'Vegan' },
     { id: 'vegetarian', label: 'Vegetarian' },
-    { id: 'keto', label: 'Keto' },
-    { id: 'paleo', label: 'Paleo' },
-    { id: 'gluten-free', label: 'Gluten-Free' },
-    { id: 'dairy-free', label: 'Dairy-Free' }
+    { id: 'plant-based', label: 'Plant-based' },
+    { id: 'high-protein', label: 'High Protein' },
   ];
   
   sortOptions = [
@@ -60,7 +60,13 @@ export class MealsComponent implements OnInit, OnDestroy {
   // map of client mealId and name-based keys to quantity in cart
   cartMap: { [key: string]: number } = {};
 
-  constructor(private cartService: CartService, private dietModeService: DietModeService, private apiService: ApiService) {}
+  constructor(
+    private cartService: CartService,
+    private dietModeService: DietModeService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
   private modeSub?: Subscription;
   private dietMode: DietMode = 'neutral';
 
@@ -69,12 +75,22 @@ ngOnDestroy(): void {
   if (this.modeSub) this.modeSub.unsubscribe();
 }
   ngOnInit() {
+
     // Fetch meals from API
     this.modeSub = this.dietModeService.getMode$().subscribe(mode => {
       this.dietMode = mode;
       this.applyFilters();
     });
     
+    // Prefill selected dietary filters from saved user preferences
+    this.authService.currentUser$.subscribe(user => {
+      const prefs = (user as any)?.dietaryPreferences;
+      if (Array.isArray(prefs) && prefs.length) {
+        this.selectedDietary = [...prefs];
+        this.applyFilters();
+      }
+    });
+
     // Load meals from API
     this.apiService.getMeals().subscribe({
       next: (meals: Meal[]) => {
@@ -151,11 +167,38 @@ ngOnDestroy(): void {
       meal.price >= this.minPrice && meal.price <= this.maxPrice
     );
 
-    // Dietary preferences filter
+    // Dietary preferences filter (with fallback to generic tags mapping)
     if (this.selectedDietary.length > 0) {
-      filtered = filtered.filter(meal =>
-        this.selectedDietary.some(diet => meal.dietary_tags.includes(diet))
-      );
+      const mapGenericToDiet = (m: Meal): string[] => {
+        const d = Array.isArray(m.dietary_tags) ? m.dietary_tags : [];
+        if (d.length > 0) return d;
+        const g = (m as any).tags as string[] | undefined;
+        const lower = Array.isArray(g) ? g.map(t => String(t).toLowerCase()) : [];
+        const derived: string[] = [];
+        if (lower.includes('vegan')) derived.push('vegan');
+        if (lower.includes('vegetarian')) derived.push('vegetarian');
+        if (lower.includes('plant-based') || lower.includes('plantbased')) derived.push('plant-based');
+        if (lower.includes('high-protein') || lower.includes('highprotein') || lower.includes('protein-pack') || lower.includes('protein')) derived.push('high-protein');
+        if (lower.includes('keto')) derived.push('keto');
+        if (lower.includes('paleo')) derived.push('paleo');
+        if (lower.includes('gluten-free') || lower.includes('glutenfree')) derived.push('gluten-free');
+        if (lower.includes('dairy-free') || lower.includes('dairyfree')) derived.push('dairy-free');
+        return derived;
+      };
+
+      // Prefer AND; fallback to OR if no results
+      const andFiltered = filtered.filter(meal => {
+        const tags = mapGenericToDiet(meal);
+        return this.selectedDietary.every(diet => tags.includes(diet));
+      });
+      if (andFiltered.length > 0) {
+        filtered = andFiltered;
+      } else {
+        filtered = filtered.filter(meal => {
+          const tags = mapGenericToDiet(meal);
+          return this.selectedDietary.some(diet => tags.includes(diet));
+        });
+      }
     }
 
     // Diet mode filter (neutral shows all)
@@ -169,8 +212,14 @@ ngOnDestroy(): void {
       );
     }
 
-    // Sort
+    // Sort: push out-of-stock to bottom, then apply selected sort within groups
     filtered.sort((a, b) => {
+      const aInv = Number(a?.inventory);
+      const bInv = Number(b?.inventory);
+      const aOOS = Number.isFinite(aInv) && aInv <= 0 ? 1 : 0;
+      const bOOS = Number.isFinite(bInv) && bInv <= 0 ? 1 : 0;
+      if (aOOS !== bOOS) return aOOS - bOOS; // in-stock (0) before out-of-stock (1)
+
       switch (this.sortBy) {
         case 'protein':
           return b.protein_grams - a.protein_grams;
@@ -194,6 +243,21 @@ ngOnDestroy(): void {
       this.selectedDietary.push(dietary);
     }
     this.applyFilters();
+    // Persist preferences to backend profile (best-effort)
+    try {
+      this.authService.updateUser({ dietaryPreferences: [...this.selectedDietary] }).subscribe({
+        next: () => {},
+        error: () => {}
+      });
+    } catch {}
+  }
+
+  clearDietary() {
+    this.selectedDietary = [];
+    this.applyFilters();
+    try {
+      this.authService.updateUser({ dietaryPreferences: [] }).subscribe({ next: () => {}, error: () => {} });
+    } catch {}
   }
 
   addToCart(event: Event, meal: Meal) {
@@ -280,10 +344,14 @@ ngOnDestroy(): void {
     this.minProtein = 0;
     this.maxProtein = 100;
     this.minPrice = 0;
-    this.maxPrice = 50;
+    this.maxPrice = 500;
     this.selectedDietary = [];
     this.sortBy = 'name';
     this.applyFilters();
+    // Persist cleared dietary preferences
+    try {
+      this.authService.updateUser({ dietaryPreferences: [] }).subscribe({ next: () => {}, error: () => {} });
+    } catch {}
   }
 
   getFilterCount(): number {

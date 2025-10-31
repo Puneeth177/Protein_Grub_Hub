@@ -114,16 +114,39 @@
 /* Quick Add Protein */
 .quick-add-form {
   display: flex;
+  flex-direction: column;
   gap: 12px;
+  align-items: stretch;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .protein-input {
   flex: 1;
-  padding: 12px 16px;
+  min-width: 0;
+  height: 44px;
+  line-height: 44px;
+  padding: 0 16px;
   border: 2px solid var(--color-border);
   border-radius: 8px;
   font-size: 16px;
+  box-sizing: border-box;
 }
+
+.quick-add .btn-primary {
+  height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Ensure button shadows/hover do not overflow the card visually */
+.card.quick-add { overflow: hidden; }
 
 .protein-input:focus {
   outline: none;

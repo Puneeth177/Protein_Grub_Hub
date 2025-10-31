@@ -78,15 +78,17 @@ async function handlePaymentSuccess(paymentIntent) {
         const user = await User.findById(payment.userId);
         
         if (order && user) {
-            order.status = 'paid';
-            order.paymentStatus = 'completed';
-            order.paidAt = new Date();
+            // Mark order completed immediately after successful payment
+            order.status = 'completed';
+            if (order.payment) {
+                order.payment.status = 'completed';
+            }
             await order.save();
 
             // Send confirmation email
             await paymentEmailService.sendPaymentSuccessEmail(user, order, payment);
             
-            console.log(`Order ${order._id} marked as paid`);
+            console.log(`Order ${order._id} marked as completed after payment success`);
         }
 
     } catch (error) {
@@ -114,11 +116,13 @@ async function handlePaymentFailed(paymentIntent) {
         // Update order status
         const order = await Order.findById(payment.orderId);
         if (order) {
-            order.status = 'payment_failed';
-            order.paymentStatus = 'failed';
+            order.status = 'cancelled';
+            if (order.payment) {
+                order.payment.status = 'failed';
+            }
             await order.save();
 
-            console.log(`Order ${order._id} payment failed`);
+            console.log(`Order ${order._id} marked as cancelled due to payment failure`);
 
             // TODO: Send failure notification email
             // TODO: Implement retry logic
@@ -143,7 +147,7 @@ async function handlePaymentCanceled(paymentIntent) {
 
         const order = await Order.findById(payment.orderId);
         if (order) {
-            order.status = 'canceled';
+            order.status = 'cancelled';
             await order.save();
         }
 
@@ -187,8 +191,7 @@ async function handleRefund(charge) {
 
         const order = await Order.findById(payment.orderId);
         if (order) {
-            order.status = 'refunded';
-            order.paymentStatus = 'refunded';
+            order.status = 'cancelled';
             await order.save();
         }
 

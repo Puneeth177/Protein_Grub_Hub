@@ -62,4 +62,14 @@ export class OrderService {
       headers: this.getAuthHeaders() 
     });
   }
+
+  // Admin: update order status
+  updateOrderStatus(orderId: string, status: string): Observable<any> {
+    if (!orderId) throw new Error('orderId required');
+    return this.http.put<any>(
+      `${this.apiUrl}/orders/${orderId}/status`,
+      { status },
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

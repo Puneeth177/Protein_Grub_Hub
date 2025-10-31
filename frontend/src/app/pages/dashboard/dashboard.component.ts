@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { OrderService } from '../../services/order.service';
+import { ApiService } from '../../services/api.service';
+
 import { Meal } from '../../models/meal.model';
 
 @Component({
@@ -13,27 +16,30 @@ import { Meal } from '../../models/meal.model';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
   currentUser: any = {};
   proteinGoal = 150;
   currentProtein = 0;
   quickProteinAmount = '';
+  private quickAddedToday = 0;
   recommendedMeals: Meal[] = [];
   weeklyData = [
-    { day: 'Mon', protein: 120 },
-    { day: 'Tue', protein: 145 },
-    { day: 'Wed', protein: 130 },
-    { day: 'Thu', protein: 160 },
-    { day: 'Fri', protein: 140 },
-    { day: 'Sat', protein: 155 },
+    { day: 'Mon', protein: 0 },
+    { day: 'Tue', protein: 0 },
+    { day: 'Wed', protein: 0 },
+    { day: 'Thu', protein: 0 },
+    { day: 'Fri', protein: 0 },
+    { day: 'Sat', protein: 0 },
     { day: 'Sun', protein: 0 }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private orderService: OrderService, private api: ApiService) {}
 
   ngOnInit() {
     this.loadUserData();
     this.loadRecommendedMeals();
     this.loadTodayProtein();
+    this.loadOrdersProtein();
   }
 
   loadUserData() {
@@ -51,70 +57,41 @@ export class DashboardComponent implements OnInit {
     const today = new Date().toDateString();
     const proteinData = localStorage.getItem(`protein_${today}`);
     if (proteinData) {
-      this.currentProtein = parseInt(proteinData);
+      this.quickAddedToday = parseInt(proteinData);
     }
   }
 
   loadRecommendedMeals() {
-    // Use static mock data for SSR compatibility
-    const staticMeals = [
-      {
-        _id: '1',
-        name: 'Grilled Chicken Power Bowl',
-        description: 'Perfectly seasoned grilled chicken breast with quinoa, roasted vegetables, and avocado',
-        protein_grams: 45,
-        carbs_grams: 35,
-        fat_grams: 18,
-        calories: 450,
-        price: 12.99,
-        image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-        category: 'main-course',
-        dietary_tags: ['gluten-free', 'dairy-free']
+    // Use live products API; fallback to empty on error
+    this.api.getMeals().subscribe({
+      next: (meals: Meal[]) => {
+        const remainingProtein = this.proteinGoal - this.currentProtein;
+        // Prefer in-stock meals and roughly within need+20g
+        const sorted = [...meals]
+          .filter(m => (m.inventory ?? 1) > 0)
+          .sort((a,b) => Math.abs((remainingProtein) - a.protein_grams) - Math.abs((remainingProtein) - b.protein_grams));
+        this.recommendedMeals = sorted.filter(m => m.protein_grams <= remainingProtein + 20).slice(0,3);
       },
-      {
-        _id: '2',
-        name: 'Salmon & Sweet Potato',
-        description: 'Wild-caught salmon with roasted sweet potato and steamed broccoli',
-        protein_grams: 40,
-        carbs_grams: 30,
-        fat_grams: 20,
-        calories: 420,
-        price: 15.99,
-        image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-        category: 'main-course',
-        dietary_tags: ['keto', 'paleo', 'gluten-free']
-      },
-      {
-        _id: '3',
-        name: 'Plant-Based Protein Stack',
-        description: 'Black bean and lentil patty with quinoa and mixed greens',
-        protein_grams: 25,
-        carbs_grams: 40,
-        fat_grams: 12,
-        calories: 350,
-        price: 10.99,
-        image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-        category: 'main-course',
-        dietary_tags: ['vegan', 'vegetarian', 'gluten-free']
+      error: () => {
+        this.recommendedMeals = [];
       }
-    ];
-    // Filter meals based on remaining protein needs
-    const remainingProtein = this.proteinGoal - this.currentProtein;
-    this.recommendedMeals = staticMeals
-      .filter(meal => meal.protein_grams <= remainingProtein + 20)
-      .slice(0, 3);
+    });
   }
 
   addQuickProtein() {
     if (this.quickProteinAmount && !isNaN(Number(this.quickProteinAmount))) {
       const amount = Number(this.quickProteinAmount);
+      this.quickAddedToday += amount;
       this.currentProtein += amount;
       
       // Save to localStorage
       const today = new Date().toDateString();
-      localStorage.setItem(`protein_${today}`, this.currentProtein.toString());
+      localStorage.setItem(`protein_${today}`, String(this.quickAddedToday));
       
       this.quickProteinAmount = '';
+      // Update today's bar in weeklyData
+      const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'short' });
+      this.weeklyData = this.weeklyData.map(d => d.day === todayLabel ? { ...d, protein: d.protein + amount } : d);
       this.loadRecommendedMeals(); // Refresh recommendations
     }
   }
@@ -142,5 +119,52 @@ export class DashboardComponent implements OnInit {
   getWeeklyAverage(): number {
     const total = this.weeklyData.reduce((sum, d) => sum + d.protein, 0);
     return Math.round(total / this.weeklyData.length);
+  }
+
+  private getStartOfDay(d: Date): Date {
+    const x = new Date(d);
+    x.setHours(0,0,0,0);
+    return x;
+  }
+
+  private sameDay(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  private getOrderProtein(order: any): number {
+    const items = Array.isArray(order?.items) ? order.items : [];
+    return items.reduce((sum: number, it: any) => sum + ((it?.meal?.protein_grams || 0) * (it?.quantity || 0)), 0);
+  }
+
+  loadOrdersProtein() {
+    this.orderService.getOrders().subscribe({
+      next: (orders: any[]) => {
+        const completed = (orders || []).filter(o => (o?.status || '').toLowerCase() === 'completed');
+        const today = new Date();
+        const startToday = this.getStartOfDay(today);
+
+        const proteinFromOrdersToday = completed
+          .filter(o => this.sameDay(new Date(o.created), startToday))
+          .reduce((sum, o) => sum + this.getOrderProtein(o), 0);
+        this.currentProtein = proteinFromOrdersToday + this.quickAddedToday;
+
+        const days: { day: string; protein: number }[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const start = this.getStartOfDay(d);
+          const label = start.toLocaleDateString(undefined, { weekday: 'short' });
+          let grams = completed
+            .filter(o => this.sameDay(new Date(o.created), start))
+            .reduce((sum, o) => sum + this.getOrderProtein(o), 0);
+          // Add quick-added protein for today into today's bar
+          if (this.sameDay(start, startToday)) grams += this.quickAddedToday;
+          days.push({ day: label, protein: grams });
+        }
+        this.weeklyData = days;
+        this.loadRecommendedMeals();
+      },
+      error: () => {}
+    });
   }
 }

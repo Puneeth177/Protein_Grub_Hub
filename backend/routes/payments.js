@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const stripeService = require('../services/stripe.service');
+const razorpayService = require('../services/razorpay.service');
 const Payment = require('../models/payment.model');
 const Order = require('../models/order.model');
+const Cart = require('../models/cart.model');
 
 /**
  * POST /api/payments/create-intent
@@ -78,6 +80,127 @@ router.post('/create-intent', auth, async (req, res) => {
     } catch (error) {
         console.error('Create Payment Intent Error:', error);
         res.status(500).json({ message: 'Failed to create payment intent', error: error.message });
+    }
+});
+
+/**
+ * POST /api/payments/razorpay/verify
+ * Verify Razorpay payment signature and mark order completed (fallback when webhook not reachable)
+ */
+router.post('/razorpay/verify', auth, async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ message: 'Missing Razorpay verification parameters' });
+        }
+
+        const ok = razorpayService.verifyPaymentSignature({
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        });
+        if (!ok) {
+            return res.status(400).json({ message: 'Invalid signature' });
+        }
+
+        // Update payment and order
+        const payment = await Payment.findOne({ razorpay_order_id });
+        if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+        // Ensure the caller owns this payment
+        if (String(payment.userId) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        payment.razorpay_payment_id = razorpay_payment_id;
+        payment.razorpay_signature = razorpay_signature;
+        payment.status = 'succeeded';
+        await payment.save();
+
+        const order = await Order.findById(payment.orderId);
+        if (order) {
+            order.status = 'completed';
+            if (order.payment) order.payment.status = 'completed';
+            await order.save();
+            // Clear user's cart after successful payment (server-authoritative)
+            try {
+                await Cart.updateOne({ userId: payment.userId }, { $set: { items: [], subtotal: 0, total: 0 } });
+            } catch (e) {
+                console.warn('Cart clear after Razorpay verify failed (non-fatal):', e.message);
+            }
+        }
+
+        return res.json({ message: 'Payment verified and order completed' });
+    } catch (error) {
+        console.error('Razorpay verify error:', error);
+        res.status(500).json({ message: 'Verification failed', error: error.message });
+    }
+});
+
+/**
+ * POST /api/payments/razorpay/create-order
+ * Create a Razorpay Order for an existing order
+ */
+router.post('/razorpay/create-order', auth, async (req, res) => {
+    try {
+        const { orderId, amount: rawAmount, currency } = req.body;
+        const userId = req.user.userId;
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if (order.userId.toString() !== userId) return res.status(403).json({ message: 'Unauthorized' });
+
+        // Ensure Razorpay keys exist
+        if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+            return res.status(500).json({
+                message: 'Failed to create Razorpay order',
+                error: 'Razorpay keys are not configured on the server.'
+            });
+        }
+
+        // Use amount from body or order total; coerce to number in rupees
+        let amount = Number(rawAmount ?? order.total ?? order.totalAmount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Invalid amount for Razorpay order' });
+        }
+
+        // Create Razorpay order (amount in paise)
+        const rzpOrder = await razorpayService.createOrder({
+            amount,
+            currency: currency || 'INR',
+            receipt: orderId.toString(),
+            notes: { appOrderId: orderId.toString(), userId }
+        });
+
+        // Upsert payment document
+        let payment = await Payment.findOne({ orderId });
+        if (!payment) {
+            payment = new Payment({
+                orderId,
+                userId,
+                amount,
+                currency: currency || 'INR',
+                status: 'pending',
+                paymentMethod: 'card',
+                razorpay_order_id: rzpOrder.id
+            });
+        } else {
+            payment.razorpay_order_id = rzpOrder.id;
+            payment.amount = amount;
+            payment.currency = currency || 'INR';
+            payment.status = 'pending';
+        }
+        await payment.save();
+
+        res.json({
+            rzpOrderId: rzpOrder.id,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            keyId: process.env.RAZORPAY_KEY_ID
+        });
+    } catch (error) {
+        console.error('Create Razorpay Order Error:', error);
+        res.status(500).json({ message: 'Failed to create Razorpay order', error: error.message });
     }
 });
 

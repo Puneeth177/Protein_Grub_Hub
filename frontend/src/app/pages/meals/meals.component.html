@@ -8,13 +8,6 @@
   <div class="filters-section reveal" role="region" aria-label="Meal Filters">
     <div class="filters-header">
       <h3>Filters</h3>
-      <button 
-        class="btn btn-outline btn-sm" 
-        (click)="clearFilters()"
-        *ngIf="getFilterCount() > 0"
-      >
-        Clear All ({{ getFilterCount() }})
-      </button>
     </div>
 
     <div class="filters-grid">
@@ -111,14 +104,28 @@
 
     <!-- Dietary Preferences -->
     <div class="dietary-filters">
-      <label>Dietary Preferences</label>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;">
+        <label style="margin:0;">Dietary Preferences</label>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          (click)="clearDietary()"
+          *ngIf="selectedDietary.length > 0"
+        >
+          Clear Selected
+        </button>
+      </div>
       <div class="dietary-tags" role="group" aria-label="Dietary Preferences">
         <button
+          type="button"
           *ngFor="let diet of dietaryOptions"
           class="dietary-tag"
           [class.selected]="selectedDietary.includes(diet.id)"
           (click)="toggleDietaryFilter(diet.id)"
           [attr.aria-pressed]="selectedDietary.includes(diet.id)"
+          [attr.style]="selectedDietary.includes(diet.id) 
+            ? 'border-color:#22d3ee !important; color:#22d3ee !important; background:transparent !important;'
+            : ''"
         >
           {{ diet.label }}
         </button>
@@ -147,13 +154,18 @@
         
         <div class="meal-content">
           <h4 class="meal-name">{{ meal.name }}</h4>
+          <p class="stock-line"
+             [attr.style]="(meal.inventory || 0) > 0 
+               ? 'color:#16a34a !important; border-color:#16a34a !important; background:transparent;'
+               : 'color:#ef4444 !important; border-color:#ef4444 !important; background:transparent;'">
+            <ng-container *ngIf="meal.inventory === 0">Out of stock</ng-container>
+            <ng-container *ngIf="meal.inventory && meal.inventory > 0">In stock: {{ meal.inventory }}</ng-container>
+            <ng-container *ngIf="meal.inventory === undefined">&nbsp;</ng-container>
+          </p>
           <p class="meal-description">{{ meal.description }}</p>
           
-          <div class="meal-tags" *ngIf="meal.dietary_tags.length > 0">
-            <span 
-              class="tag" 
-              *ngFor="let tag of meal.dietary_tags.slice(0, 3)"
-            >
+          <div class="meal-tags" *ngIf="(meal.dietary_tags?.length || meal.tags?.length)">
+            <span class="tag" *ngFor="let tag of (meal.dietary_tags?.length ? meal.dietary_tags : meal.tags) | slice:0:3">
               {{ tag }}
             </span>
           </div>
@@ -176,15 +188,16 @@
           <div class="meal-actions">
             <!-- Removed 'View Details' per UX change. Implement add-to-cart bar -->
             <div *ngIf="getQuantity(meal._id, meal.name) === 0" class="add-bar" role="group" aria-label="Add to cart">
-              <button class="btn btn-primary add-full" (click)="addToCart($event, meal)" [attr.aria-label]="'Add ' + meal.name + ' to cart'">
-                Add to Cart
+              <button class="btn btn-primary add-full" (click)="addToCart($event, meal)" [disabled]="meal.inventory === 0"
+                [attr.aria-label]="(meal.inventory===0 ? 'Out of stock: ' : 'Add ') + meal.name + ' to cart'">
+                {{ meal.inventory === 0 ? 'Out of stock' : 'Add to Cart' }}
               </button>
             </div>
 
             <div *ngIf="getQuantity(meal._id, meal.name) > 0" class="quantity-bar" role="group" aria-label="Adjust quantity">
               <button type="button" class="qty-btn" (click)="decrease($event, meal)" aria-label="Decrease quantity">-</button>
               <div class="qty-center">{{ meal.protein_grams }}g × {{ getQuantity(meal._id, meal.name) }}</div>
-              <button type="button" class="qty-btn" (click)="increase($event, meal)" aria-label="Increase quantity">+</button>
+              <button type="button" class="qty-btn" (click)="increase($event, meal)" [disabled]="meal.inventory && getQuantity(meal._id, meal.name) >= meal.inventory" aria-label="Increase quantity">+</button>
             </div>
           </div>
         </div>

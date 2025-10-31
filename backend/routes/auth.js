@@ -80,7 +80,7 @@ router.post('/register', [
 
         // Create and return JWT token
         const token = jwt.sign(
-            { userId: user._id },
+            { userId: user._id, isAdmin: !!user.isAdmin, role: user.role || 'user' },
             process.env.JWT_SECRET || 'pgh_jwt_secret_key_f8K9mP2xL5vN3qR7tY4wZ1hJ6nB9cX0',
             { expiresIn: '24h' }
         );
@@ -91,7 +91,9 @@ router.post('/register', [
             email: user.email,
             name: user.name,
             avatarUrl: user.avatar?.url,
-            isAuthenticated: true
+            isAuthenticated: true,
+            isAdmin: !!user.isAdmin,
+            role: user.role || 'user'
         };
 
         res.status(201).json({
@@ -129,7 +131,7 @@ router.post('/login', async (req, res) => {
 
         // Create and send token
         const token = jwt.sign(
-            { userId: user._id },
+            { userId: user._id, isAdmin: !!user.isAdmin, role: user.role || 'user' },
             process.env.JWT_SECRET || 'your-default-secret',
             { expiresIn: '24h' }
         );
@@ -139,8 +141,10 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             email: user.email,
             name: user.name,
-            avatarUrl: user.avatar?.url, // add this line
+            avatarUrl: user.avatar?.url, 
             isAuthenticated: true,
+            isAdmin: !!user.isAdmin,
+            role: user.role || 'user',
             proteinGoal: user.proteinGoal,
             onboardingCompleted: user.onboardingCompleted,
             fitnessGoal: user.fitnessGoal,
@@ -208,7 +212,7 @@ router.post('/google', async (req, res) => {
         // Create JWT for your app
         console.log('Creating JWT for user:', user._id);
         const token = jwt.sign(
-            { userId: user._id },
+            { userId: user._id, isAdmin: !!user.isAdmin, role: user.role || 'user' },
             process.env.JWT_SECRET || 'your-default-secret',
             { expiresIn: '24h' }
         );
@@ -218,6 +222,8 @@ router.post('/google', async (req, res) => {
             email: user.email,
             name: user.name,
             isAuthenticated: true,
+            isAdmin: !!user.isAdmin,
+            role: user.role || 'user',
             proteinGoal: user.proteinGoal,
             onboardingCompleted: user.onboardingCompleted,
             fitnessGoal: user.fitnessGoal,

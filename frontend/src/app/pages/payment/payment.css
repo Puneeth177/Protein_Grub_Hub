@@ -1,6 +1,52 @@
+/* Theme tokens */
+:root {
+  --pmt-bg: #f7f8fa;
+  --pmt-card: #ffffff;
+  --pmt-text: #0f172a;
+  --pmt-subtext: #334155;
+  --pmt-input: #e5e7eb;
+}
+.dark-theme {
+  --pmt-bg: #0b1220;
+  --pmt-card: #1f2937;
+  --pmt-text: #e5e7eb;
+  --pmt-subtext: #94a3b8;
+  --pmt-input: #334155;
+}
+
+/* Payment page should respect theme tokens */
+.payment-container {
+  background: var(--pmt-bg) !important;
+  color: var(--pmt-text) !important;
+}
+.payment-card,
+.payment-form,
+.order-summary,
+.card-element,
+.upi-payment {
+  background: var(--pmt-card) !important;
+  color: var(--pmt-text) !important;
+}
+.payment-header h1,
+.payment-methods h3,
+.payment-form h3,
+.order-summary h3 {
+  color: var(--pmt-text) !important;
+}
+.summary-row span,
+.secure-note,
+.upi-note {
+  color: var(--pmt-subtext) !important;
+}
+.card-input-wrapper input,
+.upi-input {
+  background: var(--pmt-card) !important;
+  border-color: var(--pmt-input) !important;
+  color: var(--pmt-text) !important;
+}
 .payment-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--pmt-bg) !important;
   padding: 40px 20px;
   display: flex;
   align-items: center;
@@ -469,5 +515,25 @@
 
   .payment-header h1 {
     font-size: 24px;
+  }
+}
+
+/* Hide Stripe test helper overlay in dev-only. Keep this scoped to the payment page. */
+.payment-container iframe[title*="Stripe"], 
+.payment-container div[id*="ElementsModalPortal"] {
+  display: none !important;
+}
+
+/* Final overrides for security badges for correct theme colors */
+.security-badges .badge {
+  background: #f8fafc !important; /* light slate-50 */
+  color: #0f172a !important;      /* slate-900 */
+  border: 1px solid #e2e8f0 !important; /* slate-200 */
+}
+@media (prefers-color-scheme: dark) {
+  .security-badges .badge {
+    background: #1f2937 !important; /* slate-800 */
+    color: #e5e7eb !important;       /* slate-200 */
+    border-color: #374151 !important;/* slate-700 */
   }
 }

@@ -10,7 +10,11 @@ const productSchema = new mongoose.Schema({
     carbs: { type: Number, required: true },
     fat: { type: Number, required: true },
     inventory: { type: Number, default: 0 },
-    image_url: { type: String }
+    image_url: { type: String },
+    // Dietary tags like 'vegan', 'vegetarian', 'keto', 'gluten-free', 'dairy-free', 'paleo'
+    dietary_tags: [{ type: String }],
+    // Generic searchable tags (keywords/categories)
+    tags: [{ type: String }]
 });
 
 module.exports = mongoose.model('Product', productSchema);

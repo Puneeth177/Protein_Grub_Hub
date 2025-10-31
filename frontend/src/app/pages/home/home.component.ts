@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Meal } from '../../models/meal.model';
 import { ReviewListComponent } from '../../components/reviews/review-list.component';
-
-
+import { AuthService } from '../../services/auth.service';
 
 const STATIC_MOCK_MEALS: Meal[] = [
   {
@@ -48,7 +47,6 @@ const STATIC_MOCK_MEALS: Meal[] = [
   }
 ];
 
-
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -60,13 +58,17 @@ const STATIC_MOCK_MEALS: Meal[] = [
 export class HomeComponent implements OnInit {
   featuredMeals: Meal[] = [];
   isLoading = true;
+  isLoggedIn = false;
 
-  constructor() {}
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
     // Use static mock data for SSR compatibility
     this.featuredMeals = STATIC_MOCK_MEALS;
     this.isLoading = false;
     // If you want to use real API data on the client, you can add a check for platform-browser here
+    this.authService.currentUser$.subscribe(user => {
+      this.isLoggedIn = !!user;
+    });
   }
 }

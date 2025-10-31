@@ -175,25 +175,35 @@
   gap: 8px;
 }
 
-.dietary-tag {
+.filters-section .dietary-tags .dietary-tag {
   padding: 8px 16px;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--color-border) !important;
   border-radius: 20px;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
+  background: transparent !important;
+  color: var(--color-text-secondary) !important;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  appearance: none;
 }
 
-.dietary-tag:hover {
-  border-color: var(--color-primary);
+.filters-section .dietary-tags .dietary-tag:hover { border-color: var(--color-primary) !important; }
+
+.filters-section .dietary-tags .dietary-tag.selected {
+  /* Distinct cyan outline on dark background */
+  border-color: #22d3ee !important;
+  background: transparent !important;
+  color: #22d3ee !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.45);
 }
 
-.dietary-tag.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: #ffffff;
+.dietary-tag:active {
+  transform: scale(0.98);
+}
+
+.dietary-tag:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.35);
 }
 
 /* Results Section */
@@ -283,6 +293,19 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Stock pill (oval outline; color provided inline via ngStyle) */
+.stock-line {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  background: transparent;
+  margin: 6px 0 8px 0;
 }
 
 .meal-tags {

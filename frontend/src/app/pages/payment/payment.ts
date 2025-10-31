@@ -1,21 +1,27 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
+import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
+import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../services/api.service';
+import { CartService } from '../../services/cart.service';
 import { environment } from '../../../environments/environment';
+
+declare const Razorpay: any;
 
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './payment.html',
   styleUrl: './payment.css'
 })
 export class Payment implements OnInit, OnDestroy {
   stripe: Stripe | null = null;
   elements: StripeElements | null = null;
-  cardElement: StripeCardElement | null = null;
+  paymentElementMounted = false;
+  private paymentElementRef: any = null;
 
   orderId: string = '';
   orderDetails: any = null;
@@ -29,6 +35,7 @@ export class Payment implements OnInit, OnDestroy {
 
   selectedPaymentMethod: 'card' | 'upi' = 'card';
   showUpiQr: boolean = false;
+  vpa: string = '';
 
   // UPI Details from environment
   merchantUpiId: string = '8904977307@ybl';
@@ -38,38 +45,40 @@ export class Payment implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private cartService: CartService
   ) {}
 
   async ngOnInit() {
-    // Get order ID from route
-    this.orderId = this.route.snapshot.paramMap.get('orderId') || '';
+    try {
+      // Get order ID from route
+      this.orderId = this.route.snapshot.paramMap.get('orderId') || '';
 
-    if (!this.orderId) {
-      this.errorMessage = 'Order ID not found';
-      return;
+      if (!this.orderId) {
+        this.errorMessage = 'Order ID not found';
+        return;
+      }
+
+      // Load order details
+      await this.loadOrderDetails();
+
+    } catch (err: any) {
+      this.errorMessage = err?.message || 'Failed to initialize payment page';
     }
-
-    // Load order details
-    await this.loadOrderDetails();
-
-    // Initialize Stripe
-    await this.initializeStripe();
   }
 
   async loadOrderDetails() {
     try {
       this.isLoading = true;
       // Fetch order details from API
-      this.orderDetails = await this.apiService.getOrder(this.orderId).toPromise();
+      this.orderDetails = await firstValueFrom(this.apiService.getOrder(this.orderId));
       
-      if (this.orderDetails.status === 'paid') {
+      if (this.orderDetails.status === 'completed') {
         this.router.navigate(['/orders', this.orderId]);
         return;
       }
 
-      // Create payment intent
-      await this.createPaymentIntent();
+      // Razorpay flow does not require a Stripe PaymentIntent
     } catch (error: any) {
       this.errorMessage = error.error?.message || 'Failed to load order details';
     } finally {
@@ -77,74 +86,22 @@ export class Payment implements OnInit, OnDestroy {
     }
   }
 
-  async createPaymentIntent() {
-    try {
-      const response: any = await this.apiService.createPaymentIntent({
-        orderId: this.orderId,
-        amount: this.orderDetails.total || this.orderDetails.totalAmount,
-        currency: 'INR',
-        paymentMethod: this.selectedPaymentMethod
-      }).toPromise();
-
-      this.clientSecret = response.clientSecret;
-      this.paymentIntentId = response.paymentIntentId;
-    } catch (error: any) {
-      this.errorMessage = error.error?.message || 'Failed to initialize payment';
-      throw error;
-    }
-  }
+  // No Stripe create-intent in Razorpay flow
 
   async initializeStripe() {
-    try {
-      // Load Stripe with publishable key
-      this.stripe = await loadStripe(environment.stripePublishableKey);
-
-      if (!this.stripe) {
-        throw new Error('Failed to load Stripe');
-      }
-
-      // Create Elements instance
-      this.elements = this.stripe.elements();
-
-      // Create and mount card element
-      this.cardElement = this.elements.create('card', {
-        style: {
-          base: {
-            fontSize: '16px',
-            color: '#32325d',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            '::placeholder': {
-              color: '#aab7c4'
-            }
-          },
-          invalid: {
-            color: '#fa755a',
-            iconColor: '#fa755a'
-          }
-        }
-      });
-
-      // Mount card element to DOM
-      setTimeout(() => {
-        if (this.cardElement) {
-          this.cardElement.mount('#card-element');
-        }
-      }, 100);
-
-    } catch (error) {
-      console.error('Stripe initialization error:', error);
-      this.errorMessage = 'Failed to initialize payment system';
-    }
+    // Not required for Razorpay flow; no-op
+    return;
   }
 
-  selectPaymentMethod(method: 'card' | 'upi') {
+  async selectPaymentMethod(method: 'card' | 'upi') {
     this.selectedPaymentMethod = method;
     this.errorMessage = '';
     
     if (method === 'upi') {
-      this.showUpiQr = true;
-      this.generateUpiQrCode();
+      this.showUpiQr = false;
     }
+
+    // No-op for Razorpay: method selection happens inside Razorpay modal
   }
 
   generateUpiQrCode() {
@@ -167,8 +124,17 @@ export class Payment implements OnInit, OnDestroy {
   }
 
   async handleCardPayment() {
-    if (!this.stripe || !this.cardElement || !this.clientSecret) {
+    // With Payment Element, card flow uses the same confirmPayment call.
+    await this.submitPayment();
+  }
+
+  async handleUpiPayment() {
+    if (!this.stripe || !this.clientSecret) {
       this.errorMessage = 'Payment system not ready';
+      return;
+    }
+    if (!this.vpa || !/^[\w.-]+@[\w.-]+$/.test(this.vpa)) {
+      this.errorMessage = 'Enter a valid UPI ID (e.g., name@upi)';
       return;
     }
 
@@ -177,67 +143,134 @@ export class Payment implements OnInit, OnDestroy {
     this.successMessage = '';
 
     try {
-      console.log('Confirming card payment...');
-      
-      // Confirm card payment
-      const { error, paymentIntent } = await this.stripe.confirmCardPayment(
-        this.clientSecret,
-        {
-          payment_method: {
-            card: this.cardElement
-          }
-        }
-      );
-
-      if (error) {
-        console.error('Payment error:', error);
-        this.errorMessage = error.message || 'Payment failed';
-        this.isProcessing = false;
-        return;
-      }
-
-      console.log('Payment Intent:', paymentIntent);
-
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
-        this.successMessage = '✅ Payment Successful! Redirecting to your orders...';
-        console.log('Payment succeeded, redirecting...');
-        
-        // Wait 2 seconds then redirect
-        setTimeout(() => {
-          this.router.navigate(['/orders']);
-        }, 2000);
-      } else if (paymentIntent && paymentIntent.status === 'requires_action') {
-        this.errorMessage = 'Additional authentication required. Please complete the verification.';
-      } else {
-        this.errorMessage = 'Payment status: ' + (paymentIntent?.status || 'unknown');
-      }
+      this.errorMessage = 'UPI is not available in this build. Please use Card.';
+      this.isProcessing = false;
+      return;
 
     } catch (error: any) {
-      console.error('Payment processing error:', error);
       this.errorMessage = error.message || 'Payment processing failed';
     } finally {
       this.isProcessing = false;
     }
   }
 
-  async handleUpiPayment() {
-    // For UPI, show QR code and instructions
-    this.showUpiQr = true;
-    this.errorMessage = 'Scan the QR code with any UPI app to complete payment';
+  async submitPayment() {
+    if (this.isProcessing) {
+      console.log('[Payment] Ignoring click while processing');
+      return;
+    }
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isProcessing = true;
+    console.log('[Payment] Pay button clicked');
+
+    try {
+      if (!this.orderDetails) {
+        this.errorMessage = 'Order not found';
+        this.isProcessing = false;
+        return;
+      }
+      if (typeof Razorpay === 'undefined') {
+        console.error('[Payment] Razorpay script not loaded');
+        this.errorMessage = 'Payment system not ready (Razorpay script not loaded). Please hard refresh the page (Ctrl+Shift+R).';
+        this.isProcessing = false;
+        return;
+      }
+
+      const total = this.orderDetails.total || this.orderDetails.totalAmount;
+      console.log('[Payment] Creating Razorpay order...', { orderId: this.orderId, total });
+      const resp = await firstValueFrom(this.apiService.createRazorpayOrder({
+        orderId: this.orderId,
+        amount: total,
+        currency: 'INR'
+      }));
+
+      console.log('[Payment] Razorpay order created', resp);
+
+      const options: any = {
+        key: resp.keyId,
+        amount: resp.amount, // in paise
+        currency: resp.currency,
+        name: 'Protein Grub Hub',
+        description: `Order #${this.orderId}`,
+        order_id: resp.rzpOrderId,
+        theme: { color: '#0ea5e9' },
+        modal: {
+          ondismiss: () => {
+            console.log('[Payment] Razorpay modal dismissed by user');
+            this.errorMessage = 'Payment was cancelled before completion. You have not been charged.';
+            this.successMessage = '';
+            this.isProcessing = false;
+          }
+        },
+        handler: async (successResp: any) => {
+          this.successMessage = 'Payment initiated. Finalizing your order...';
+          // Try client-side verification (fallback if webhook can’t reach local server)
+          try {
+            if (successResp?.razorpay_order_id && successResp?.razorpay_payment_id && successResp?.razorpay_signature) {
+              await firstValueFrom(this.apiService.verifyRazorpayPayment({
+                razorpay_order_id: successResp.razorpay_order_id,
+                razorpay_payment_id: successResp.razorpay_payment_id,
+                razorpay_signature: successResp.razorpay_signature
+              }));
+              // Refresh cart from server after successful verification
+              this.cartService.refreshFromServer();
+            }
+          } catch (e) {
+            // ignore; webhook/polling will still complete order
+          }
+          await this.pollOrderCompletion();
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', (err: any) => {
+        const code = err?.error?.code || 'FAILED';
+        const desc = err?.error?.description || 'Payment failed';
+        this.errorMessage = `Payment ${code}: ${desc}. Please try again.`;
+        this.successMessage = '';
+        this.isProcessing = false;
+      });
+      // When user closes the Razorpay modal without paying
+      rzp.on('modal.closed', () => {
+        this.errorMessage = 'Payment was cancelled before completion. You have not been charged.';
+        this.successMessage = '';
+        this.isProcessing = false;
+      });
+      console.log('[Payment] Opening Razorpay modal');
+      rzp.open();
+
+    } catch (error: any) {
+      this.errorMessage = error?.message || 'Failed to start payment';
+      console.error('[Payment] submitPayment error', error);
+      this.isProcessing = false;
+    }
   }
 
-  async submitPayment() {
-    if (this.selectedPaymentMethod === 'card') {
-      await this.handleCardPayment();
-    } else {
-      await this.handleUpiPayment();
+  private async pollOrderCompletion(maxWaitMs: number = 20000, intervalMs: number = 2000) {
+    const start = Date.now();
+    try {
+      while (Date.now() - start < maxWaitMs) {
+        const order = await firstValueFrom(this.apiService.getOrder(this.orderId));
+        if (order?.status === 'completed') {
+          // Ensure cart reflects server-cleared state
+          this.cartService.refreshFromServer();
+          this.successMessage = '✅ Payment Successful! Redirecting to confirmation...';
+          setTimeout(() => this.router.navigate(['/order-success', this.orderId]), 1000);
+          return;
+        }
+        await new Promise(r => setTimeout(r, intervalMs));
+      }
+      this.errorMessage = 'Payment is processing. Please check Orders shortly.';
+    } catch (e) {
+      this.errorMessage = 'Unable to verify payment status. Please check Orders.';
+    } finally {
+      this.isProcessing = false;
     }
   }
 
   ngOnDestroy() {
     // Cleanup
-    if (this.cardElement) {
-      this.cardElement.destroy();
-    }
+    // Payment Element is auto-cleaned up with DOM removal
   }
 }

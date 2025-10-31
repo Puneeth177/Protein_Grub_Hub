@@ -9,7 +9,8 @@ class StripeService {
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: Math.round(amount * 100), // Convert to smallest currency unit (paise)
                 currency: currency.toLowerCase(),
-                payment_method_types: paymentMethod === 'upi' ? ['card', 'upi'] : ['card'],
+                // Restrict to the selected method so the Payment Element only shows that option
+                payment_method_types: paymentMethod === 'upi' ? ['upi'] : ['card'],
                 metadata: {
                     orderId: orderId.toString(),
                     userId: userId.toString(),

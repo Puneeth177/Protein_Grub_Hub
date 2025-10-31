@@ -88,7 +88,12 @@ export class AuthService {
     if (response && response.token && response.user) {
       const respUser: any = response.user || {};
       const prevAvatar = this.currentUserSubject.value?.avatar?.url || null;
-      const avatarUrl = respUser.avatar?.url || respUser.avatarUrl || prevAvatar || null;
+      const provider = (respUser.provider || respUser.oauthProvider || respUser.authProvider || '').toString().toLowerCase();
+      // If Google sign-in, do NOT take avatar URL from Google; default to initials
+      const allowExternalAvatar = provider && provider !== 'google';
+      const avatarUrl = allowExternalAvatar
+        ? (respUser.avatar?.url || respUser.avatarUrl || prevAvatar || null)
+        : null;
 
       const user: User = {
         ...respUser,

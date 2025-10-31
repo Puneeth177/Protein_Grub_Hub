@@ -12,9 +12,7 @@ const paymentSchema = new mongoose.Schema({
         required: true
     },
     stripePaymentIntentId: {
-        type: String,
-        required: true,
-        unique: true
+        type: String
     },
     amount: {
         type: Number,
@@ -26,14 +24,29 @@ const paymentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'processing', 'succeeded', 'failed', 'canceled', 'requires_action'],
+        enum: [
+            'pending',
+            'processing',
+            'succeeded',
+            'failed',
+            'canceled',
+            'requires_action',
+            'requires_payment_method',
+            'requires_confirmation',
+            'requires_capture',
+            'refunded'
+        ],
         default: 'pending'
     },
     paymentMethod: {
         type: String,
         enum: ['card', 'upi', 'netbanking']
     },
-    clientSecret: String,
+    clientSecret: { type: String },
+    // Razorpay fields
+    razorpay_order_id: { type: String, index: true },
+    razorpay_payment_id: { type: String },
+    razorpay_signature: { type: String },
     metadata: {
         type: Map,
         of: String
@@ -43,7 +56,9 @@ const paymentSchema = new mongoose.Schema({
 
 paymentSchema.index({ orderId: 1 });
 paymentSchema.index({ userId: 1 });
+// Keep a normal (non-unique) index so lookups remain fast
 paymentSchema.index({ stripePaymentIntentId: 1 });
 paymentSchema.index({ status: 1 });
+paymentSchema.index({ razorpay_order_id: 1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

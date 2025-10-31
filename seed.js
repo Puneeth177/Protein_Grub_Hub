@@ -13,7 +13,8 @@ const products = [
         carbs: 35,
         fat: 12,
         inventory: 50,
-        image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+        tags: ['meal','chicken','grilled','bowl','quinoa','vegetables','high-protein','balanced']
     },
     {
         name: 'Plant-Based Protein Stack',
@@ -25,7 +26,8 @@ const products = [
         carbs: 40,
         fat: 8,
         inventory: 60,
-        image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+        tags: ['meal','plant-based','vegan','lentil','quinoa','greens','fiber','balanced']
     },
     {
         name: 'Salmon & Sweet Potato',
@@ -37,7 +39,8 @@ const products = [
         carbs: 35,
         fat: 15,
         inventory: 30,
-        image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80',
+        tags: ['meal','salmon','fish','omega-3','sweet-potato','broccoli','balanced']
     },
     {
         name: 'High Protein Chicken Bowl',
@@ -49,7 +52,8 @@ const products = [
         carbs: 35,
         fat: 12,
         inventory: 50,
-        image_url: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?w=800&q=80',
+        tags: ['meal','chicken','bowl','quinoa','vegetables','high-protein']
     },
     {
         name: 'Protein Smoothie',
@@ -61,7 +65,8 @@ const products = [
         carbs: 30,
         fat: 5,
         inventory: 100,
-        image_url: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=800&q=80',
+        tags: ['drink','smoothie','whey','banana','berries','post-workout','high-protein']
     },
     {
         name: 'Power Protein Bar',
@@ -73,7 +78,8 @@ const products = [
         carbs: 20,
         fat: 8,
         inventory: 200,
-        image_url: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=800&q=80',
+        tags: ['snack','bar','nuts','dark-chocolate','on-the-go','protein']
     },
     {
         name: 'Salmon Protein Pack',
@@ -85,7 +91,8 @@ const products = [
         carbs: 40,
         fat: 15,
         inventory: 30,
-        image_url: 'https://images.unsplash.com/photo-1485921325833-c519f76c4927?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1485921325833-c519f76c4927?w=800&q=80',
+        tags: ['meal','salmon','grilled','sweet-potato','broccoli','protein-pack']
     },
     {
         name: 'Protein Pancakes',
@@ -97,7 +104,8 @@ const products = [
         carbs: 45,
         fat: 8,
         inventory: 40,
-        image_url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&q=80',
+        tags: ['breakfast','pancakes','berries','sweet','protein']
     },
     {
         name: 'Turkey Protein Wrap',
@@ -109,7 +117,8 @@ const products = [
         carbs: 25,
         fat: 14,
         inventory: 45,
-        image_url: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&q=80',
+        tags: ['meal','turkey','wrap','avocado','veggies','high-protein']
     },
     {
         name: 'Chicken Tikka Masala',
@@ -121,7 +130,8 @@ const products = [
         carbs: 40,
         fat: 18,
         inventory: 40,
-        image_url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
+        tags: ['meal','chicken','tikka-masala','rice','indian','spicy','comfort']
     },
     {
         name: 'Palak Paneer',
@@ -133,7 +143,8 @@ const products = [
         carbs: 35,
         fat: 15,
         inventory: 50,
-        image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&q=80',
+        tags: ['meal','vegetarian','paneer','spinach','curry','indian']
     },
     {
         name: 'Chana Masala',
@@ -145,7 +156,8 @@ const products = [
         carbs: 40,
         fat: 10,
         inventory: 60,
-        image_url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
+        tags: ['meal','vegan','chickpea','curry','indian','spiced']
     },
     {
         name: 'Rajma Masala',
@@ -157,7 +169,8 @@ const products = [
         carbs: 35,
         fat: 12,
         inventory: 45,
-        image_url: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=800&q=80'
+        image_url: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=800&q=80',
+        tags: ['meal','vegan','kidney-beans','curry','indian','comfort']
     }
 ];
 
@@ -183,6 +196,9 @@ const seedDatabase = async () => {
             email: 'test@example.com',
             password: hashedPassword,
             name: 'Test User',
+            emailVerified: true,
+            isAdmin: true,
+            role: 'admin',
             onboardingCompleted: true,
             proteinGoal: 150,
             fitnessGoal: 'build_muscle',

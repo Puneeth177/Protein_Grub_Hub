@@ -374,6 +374,19 @@
   gap: 12px;
 }
 
+/* Stock status pill */
+.item-stock {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  background: transparent;
+  margin: 4px 0 6px 0;
+}
+
 /* Buttons */
 .btn {
   padding: 12px 24px;

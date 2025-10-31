@@ -36,11 +36,40 @@ export class ApiService {
     }
   }
 
+  private getAuthHeaders(): { [key: string]: string } {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const token = localStorage.getItem('token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+    return {};
+  }
+
   // Authentication Methods
   register(userData: UserRegistration): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/register`, userData).pipe(
       catchError(this.handleError)
     );
+  }
+
+  // Admin: create product
+  createProduct(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/products`, payload, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  // Admin: update product
+  updateProduct(id: string, payload: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/products/${id}`, payload, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  // Admin: delete product
+  deleteProduct(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/products/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
   }
 
   login(credentials: UserLogin): Observable<any> {
@@ -126,7 +155,9 @@ export class ApiService {
       price: product.price,
       category: product.category.toLowerCase(),
       image_url: product.image_url || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400`,
-      dietary_tags: product.dietary_tags || []
+      dietary_tags: product.dietary_tags || [],
+      inventory: typeof product.inventory === 'number' ? product.inventory : undefined,
+      tags: Array.isArray(product.tags) ? product.tags : []
     };
   }
 
@@ -139,6 +170,20 @@ export class ApiService {
 
   getPayment(paymentId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/payments/${paymentId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Razorpay: create order
+  createRazorpayOrder(payload: { orderId: string; amount: number; currency: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/payments/razorpay/create-order`, payload).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Razorpay: verify payment (fallback if webhook unreachable)
+  verifyRazorpayPayment(payload: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/payments/razorpay/verify`, payload).pipe(
       catchError(this.handleError)
     );
   }

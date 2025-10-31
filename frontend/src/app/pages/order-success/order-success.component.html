@@ -1,0 +1,29 @@
+<div class="success-container" *ngIf="!loading && !error; else stateTpl">
+  <div class="success-card">
+    <div class="icon">✅</div>
+    <h1>Order Placed Successfully!</h1>
+    <p>Your order <strong>#{{ orderId }}</strong> has been confirmed.</p>
+
+    <div class="order-info" *ngIf="order">
+      <div class="row"><span>Items:</span><span>{{ order?.items?.length || 0 }}</span></div>
+      <div class="row"><span>Subtotal:</span><span>₹{{ order?.subtotal | number:'1.2-2' }}</span></div>
+      <div class="row"><span>GST:</span><span>₹{{ order?.tax | number:'1.2-2' }}</span></div>
+      <div class="row"><span>Delivery:</span><span>₹{{ order?.deliveryFee | number:'1.2-2' }}</span></div>
+      <div class="row total"><span>Total:</span><span>₹{{ order?.total | number:'1.2-2' }}</span></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="viewOrders()">View Order Status</button>
+      <button class="btn btn-outline" (click)="continueShopping()">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #stateTpl>
+  <div class="success-container">
+    <div class="success-card">
+      <div *ngIf="loading">Loading order...</div>
+      <div *ngIf="!loading && error" class="error">{{ error }}</div>
+    </div>
+  </div>
+</ng-template>

@@ -33,6 +33,13 @@
           <div class="item-details">
             <h3 class="item-name">{{ item.meal.name }}</h3>
             <p class="item-description">{{ item.meal.description }}</p>
+            <p class="item-stock"
+               [attr.style]="(item?.meal?.inventory||0) > 0 
+                 ? 'color:#16a34a !important; border-color:#16a34a !important; background:transparent;'
+                 : 'color:#ef4444 !important; border-color:#ef4444 !important; background:transparent;'">
+              <ng-container *ngIf="item?.meal?.inventory === 0">Out of stock</ng-container>
+              <ng-container *ngIf="item?.meal?.inventory && item.meal.inventory > 0">In stock: {{ item.meal.inventory }}</ng-container>
+            </p>
             
             <div class="item-stats">
               <span class="stat">{{ (item.meal?.protein_grams ?? 0) }}g protein</span>
@@ -49,6 +56,7 @@
                       (click)="updateQuantity(item.meal._id, item.quantity - 1, item.meal?.name)">-</button>
               <span class="quantity">{{ item.quantity }}</span>
               <button type="button" class="quantity-btn"
+                      [disabled]="item?.meal?.inventory && item.quantity >= item.meal.inventory"
                       (click)="updateQuantity(item.meal._id, item.quantity + 1, item.meal?.name)">+</button>
 
               <button type="button" class="remove-btn"
@@ -73,6 +81,11 @@
       <!-- Cart Summary -->
   <div class="cart-summary reveal" *ngIf="cartTotal$ | async as cartTotal" role="region" aria-label="Order Summary">
         <h3>Order Summary</h3>
+        
+        <!-- Stock warning -->
+        <div class="stock-warning" *ngIf="hasStockIssue(cartItems)" role="alert" aria-live="assertive" style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:10px;border-radius:8px;margin-bottom:12px;">
+          One or more items are out of stock or exceed available quantity. Please remove or adjust them to proceed.
+        </div>
         
         <!-- Free Delivery Progress -->
         <div class="delivery-progress" *ngIf="!isEligibleForFreeDelivery(cartTotal)">
@@ -143,9 +156,9 @@
           <a routerLink="/meals" class="btn btn-outline">
             Continue Shopping
           </a>
-          <a routerLink="/checkout" class="btn btn-primary">
-            Proceed to Checkout
-          </a>
+          <button type="button" class="btn btn-primary" [disabled]="hasStockIssue(cartItems)" (click)="proceedToCheckout(cartItems)" [attr.aria-disabled]="hasStockIssue(cartItems)">
+            {{ hasStockIssue(cartItems) ? 'Resolve Stock Issues' : 'Proceed to Checkout' }}
+          </button>
         </div>
       </div>
     </div>

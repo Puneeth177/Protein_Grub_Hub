@@ -78,8 +78,8 @@
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta reveal">
+<!-- CTA Section (guests only) -->
+<section class="cta reveal" *ngIf="!isLoggedIn">
   <div class="container">
     <div class="cta-content">
       <h2>Ready to Transform Your Nutrition?</h2>

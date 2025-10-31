@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
         height: { type: String },
         activityLevel: { type: String }
     },
+    // Authorization
+    isAdmin: { type: Boolean, default: false },
+    role: { type: String, default: 'user' },
+
     created: { type: Date, default: Date.now },
     updated: { type: Date, default: Date.now }
 });

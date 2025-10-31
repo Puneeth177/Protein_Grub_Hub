@@ -104,40 +104,24 @@ router.post('/', auth, async (req, res) => {
 
             await order.save();
             await Reservation.deleteOne({ userId: req.user.userId }).catch(() => {});
-            
-            // Find and clear user's cart
-            const cart = await Cart.findOne({ userId: req.user.userId });
-            if (cart) {
-                cart.items = [];
-                cart.total = 0;
-                await cart.save();
+            // For Cash on Delivery, consider the order placed and clear cart immediately
+            try {
+                if ((req.body?.paymentMethod || '').toLowerCase() === 'cash') {
+                    const cart = await Cart.findOne({ userId: req.user.userId });
+                    if (cart) {
+                        cart.items = [];
+                        cart.subtotal = 0;
+                        cart.total = 0;
+                        await cart.save();
+                    }
+                }
+            } catch (e) {
+                console.warn('COD cart clear failed (non-fatal):', e.message);
             }
 
             try {
-                const user = await User.findById(req.user.userId).select('email name');
-                if (user && user.email) {
-                    const firstName = (user.name || '').split(' ')[0] || 'there';
-                    const itemsForEmail = (items || []).map(i => ({
-                        name: i.meal?.name || 'Item',
-                        qty: i.quantity,
-                        price: `$${(i.meal?.price || 0).toFixed(2)}`
-                    }));
-                    const vars = {
-                        firstName,
-                        orderId: String(order._id),
-                        items: itemsForEmail,
-                        total: `$${(total || 0).toFixed(2)}`,
-                        deliveryDate: 'Soon',
-                        orderUrl: `${process.env.FRONTEND_URL || 'http://localhost:4201'}/orders/${order._id}`,
-                        cancelWindowHours: 2
-                    };
-                    const subject = templates.orderConfirmation.subject(vars);
-                    const html = templates.orderConfirmation.html(vars);
-                    const text = templates.orderConfirmation.text(vars);
-                    sendMail({ to: user.email, subject, html, text }).catch(e => {
-                        console.error('Order email send failed:', e.message);
-                    });
-                }
+                // Intentionally not sending order confirmation email here.
+                // Confirmation is sent after successful payment via Stripe webhook.
             } catch (e) {
                 console.error('Order email flow error:', e.message);
             }
@@ -158,8 +142,10 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
+const requireAdmin = require('../middleware/requireAdmin');
+
 // Update order status (admin only)
-router.put('/:id/status', auth, async (req, res) => {
+router.put('/:id/status', auth, requireAdmin, async (req, res) => {
     try {
         const { status } = req.body;
         const order = await Order.findByIdAndUpdate(

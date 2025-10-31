@@ -6,6 +6,20 @@ function replaceVars(str, vars) {
   });
 }
 
+function formatINR(value) {
+  if (typeof value === 'number') {
+    try {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
+    } catch (_) {
+      return `₹${value.toFixed(2)}`;
+    }
+  }
+  const s = String(value ?? '').trim();
+  if (!s) return '₹0.00';
+  if (/₹|Rs\.?/i.test(s)) return s.replace('$', '₹');
+  return s.startsWith('$') ? `₹${s.slice(1)}` : `₹${s}`;
+}
+
 const otp = {
   subject: 'Verify your login – Protein Grub Hub',
   html: (vars) => replaceVars(`<!doctype html>
@@ -19,6 +33,7 @@ const otp = {
         <td align="center" style="padding:28px 12px;">
           <table role="presentation" width="600" style="max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;">
             <tr><td style="padding:20px 28px 0 28px;"><h1 style="margin:0;font-size:20px;color:#111;font-weight:600;">Protein Grub Hub</h1></td></tr>
+            <tr><td style="padding:18px 28px 0 28px;"><p style="margin:0;color:#374151;font-size:15px;line-height:1.5;">Hi <strong>{{firstName}}</strong>,</p></td></tr>
             <tr><td style="padding:18px 28px 8px 28px;"><p style="margin:0;color:#374151;font-size:15px;line-height:1.5;">Hi <strong>{{firstName}}</strong>,</p></td></tr>
             <tr>
               <td style="padding:12px 28px;">
@@ -101,17 +116,18 @@ function renderOrderItemsHtml(items) {
 <tr>
   <td style="padding:8px 0;color:#111;font-size:14px;">${i.name}</td>
   <td align="right" style="padding:8px 0;color:#111;font-size:14px;">${i.qty}</td>
-  <td align="right" style="padding:8px 0;color:#111;font-size:14px;">${i.price}</td>
+  <td align="right" style="padding:8px 0;color:#111;font-size:14px;">${formatINR(i.price)}</td>
 </tr>`).join('');
 }
 function renderOrderItemsText(items) {
-  return items.map(i => `- ${i.name} x${i.qty} : ${i.price}`).join('\n');
+  return items.map(i => `- ${i.name} x${i.qty} : ${formatINR(i.price)}`).join('\n');
 }
 
 const orderConfirmation = {
   subject: (vars) => replaceVars('Order Confirmed — Protein Grub Hub (Order #{{orderId}})', vars),
   html: (vars) => {
     const rows = renderOrderItemsHtml(vars.items || []);
+    const totalFormatted = formatINR(vars.total);
     const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
 <body style="font-family:Inter,system-ui,Arial,Helvetica,sans-serif;margin:0;padding:0;background:#f6f8fb;">
 <table role="presentation" width="100%"><tr><td align="center" style="padding:28px 12px;">
@@ -129,7 +145,7 @@ const orderConfirmation = {
         <tbody>
           ${rows}
           <tr><td style="padding:10px 0;border-top:1px solid #eef2f6;"></td><td style="padding:10px 0;border-top:1px solid #eef2f6;"></td><td style="padding:10px 0;border-top:1px solid #eef2f6;"></td></tr>
-          <tr><td style="padding:8px 0;font-weight:600;color:#111;font-size:14px;">Total</td><td></td><td align="right" style="font-weight:600;color:#111;font-size:14px;">{{total}}</td></tr>
+          <tr><td style="padding:8px 0;font-weight:600;color:#111;font-size:14px;">Total</td><td></td><td align="right" style="font-weight:600;color:#111;font-size:14px;">${totalFormatted}</td></tr>
         </tbody>
       </table>
       <p style="margin:0 0 8px 0;color:#4b5563;font-size:14px;">Delivery estimate: <strong>{{deliveryDate}}</strong></p>
@@ -144,6 +160,7 @@ const orderConfirmation = {
   },
   text: (vars) => {
     const rows = renderOrderItemsText(vars.items || []);
+    const totalFormatted = formatINR(vars.total);
     return replaceVars(`Protein Grub Hub
 
 Hi {{firstName}},
@@ -152,7 +169,7 @@ Thanks — we’ve confirmed your order #{{orderId}}. Here are the details:
 
 ${rows}
 
-Total: {{total}}
+Total: ${totalFormatted}
 Delivery estimate: {{deliveryDate}}
 
 View order details: {{orderUrl}}

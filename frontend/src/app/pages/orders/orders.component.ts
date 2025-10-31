@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
+import { OrderService } from '../../services/order.service';
+
 import { OrderHistory } from '../../models/order-history.model';
 
 @Component({
@@ -22,7 +24,9 @@ export class OrdersComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private cartService: CartService
+    private cartService: CartService,
+    private orderService: OrderService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
@@ -36,104 +40,39 @@ export class OrdersComponent implements OnInit {
 
   loadOrders() {
     this.isLoading = true;
-    
-    // Simulate API call with mock data
-    setTimeout(() => {
-      this.orders = this.getMockOrders();
-      this.isLoading = false;
-    }, 1000);
-  }
+    this.orderService.getOrders().subscribe({
+      next: (orders: any[]) => {
+        // Backend returns array of orders; assign directly. If template expects OrderHistory, keep fields compatible.
+        this.orders = (orders || []).map(o => ({
+          _id: o._id,
+          orderNumber: o._id,
+          date: new Date(o.created || o.createdAt || o.updatedAt || Date.now()),
+          status: o.status || 'pending',
+          items: o.items || [],
+          subtotal: o.subtotal || 0,
+          deliveryFee: o.deliveryFee || 0,
+          tax: o.tax || 0,
+          total: o.total || o.totalAmount || 0,
+          deliveryAddress: (o.delivery && (o.delivery.street || o.delivery.address)) || '',
+          estimatedDelivery: o.estimatedDelivery || null,
+          actualDelivery: o.actualDelivery || null
+        })) as any;
+        this.isLoading = false;
 
-  getMockOrders(): OrderHistory[] {
-    return [
-      {
-        _id: '1',
-        orderNumber: 'PGH-2024-001',
-        date: new Date('2024-01-15T10:30:00'),
-        status: 'delivered',
-        items: [
-          {
-            meal: {
-              _id: '1',
-              name: 'Grilled Chicken Power Bowl',
-              image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-              protein_grams: 45,
-              calories: 450,
-              price: 12.99
-            },
-            quantity: 2
-          },
-          {
-            meal: {
-              _id: '4',
-              name: 'Greek Yogurt Protein Bowl',
-              image_url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
-              protein_grams: 20,
-              calories: 240,
-              price: 7.99
-            },
-            quantity: 1
+        // If an :orderId param is present, auto-open that order
+        const targetId = this.route.snapshot.paramMap.get('orderId');
+        if (targetId) {
+          const match = this.orders.find(or => String(or._id) === String(targetId));
+          if (match) {
+            this.selectedOrder = match as any;
           }
-        ],
-        subtotal: 33.97,
-        deliveryFee: 0,
-        tax: 2.72,
-        total: 36.69,
-        deliveryAddress: '123 Main St, City, State 12345',
-        estimatedDelivery: new Date('2024-01-15T12:30:00'),
-        actualDelivery: new Date('2024-01-15T12:15:00')
+        }
       },
-      {
-        _id: '2',
-        orderNumber: 'PGH-2024-002',
-        date: new Date('2024-01-18T14:20:00'),
-        status: 'out-for-delivery',
-        items: [
-          {
-            meal: {
-              _id: '2',
-              name: 'Salmon & Sweet Potato',
-              image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400',
-              protein_grams: 40,
-              calories: 420,
-              price: 15.99
-            },
-            quantity: 1
-          }
-        ],
-        subtotal: 15.99,
-        deliveryFee: 5.99,
-        tax: 1.28,
-        total: 23.26,
-        deliveryAddress: '123 Main St, City, State 12345',
-        estimatedDelivery: new Date('2024-01-18T16:20:00')
-      },
-      {
-        _id: '3',
-        orderNumber: 'PGH-2024-003',
-        date: new Date('2024-01-20T09:15:00'),
-        status: 'preparing',
-        items: [
-          {
-            meal: {
-              _id: '3',
-              name: 'Plant-Based Protein Stack',
-              image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
-              protein_grams: 25,
-              calories: 350,
-              price: 10.99
-            },
-            quantity: 3
-          }
-        ],
-        subtotal: 32.97,
-        deliveryFee: 5.99,
-        tax: 2.64,
-        total: 41.60,
-        deliveryAddress: '123 Main St, City, State 12345',
-        estimatedDelivery: new Date('2024-01-20T11:15:00')
+      error: (err) => {
+        console.error('Failed to load orders', err);
+        this.isLoading = false;
       }
-    ];
+    });
   }
 
   getFilteredOrders(): OrderHistory[] {

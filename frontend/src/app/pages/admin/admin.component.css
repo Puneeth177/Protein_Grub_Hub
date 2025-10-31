@@ -1,0 +1,169 @@
+:root {
+  /* rely on global theme variables already defined */
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* Old .grid no longer used for primary layout */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* Inventory full width */
+.inventory { margin-bottom: 24px; }
+
+/* Two-column row: products wide, orders narrow */
+.row.two-col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.card-header h2 {
+  margin: 0 0 4px 0;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.card-header p {
+  margin: 0 0 12px 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.table th { text-align: left; color: var(--color-text-secondary); font-weight: 600; }
+
+/* Compact table variant for Orders */
+.table.compact th, .table.compact td { padding: 8px 10px; }
+
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-cell img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.product-cell .name { font-weight: 600; }
+.product-cell .muted { color: var(--color-text-secondary); font-size: 12px; }
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.input.stock { max-width: 100px; }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.actions { display: flex; justify-content: flex-end; }
+
+.btn { 
+  padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none;
+  background: var(--color-primary); color:#fff; transition: all .2s ease; text-decoration: none; display:inline-flex; align-items:center; gap:8px;
+}
+.btn:hover { filter: brightness(0.95); }
+
+.btn-outline { background: transparent; color: var(--color-primary); border:2px solid var(--color-primary); }
+.btn-outline:hover { background: var(--color-primary); color:#fff; }
+
+.btn-sm { padding: 8px 12px; font-size: 14px; }
+
+.empty { color: var(--color-text-secondary); padding: 12px; text-align: center; }
+
+/* Toolbar spacing */
+.toolbar { margin: 8px 0 12px; }
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.tag { background: var(--color-muted, rgba(127,127,127,0.08)); border: 1px solid var(--color-border); color: var(--color-text); padding: 4px 8px; border-radius: 999px; cursor: pointer; font-size: 12px; }
+.tag-add { display: flex; gap: 8px; align-items: center; }
+
+/* Delete list grid */
+.delete-list { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+  gap: 12px; 
+  margin-top: 12px;
+}
+.delete-list h3 { grid-column: 1 / -1; margin: 8px 0; }
+.delete-row { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 12px; 
+  padding: 10px 12px; 
+  border: 1px solid var(--color-border); 
+  border-radius: 10px; 
+  background: var(--color-surface);
+}
+.delete-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Toasts */
+.toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+.toast { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text); padding: 10px 12px; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.toast.success { border-color: #16a34a33; }
+.toast.error { border-color: #dc262633; }
+
+@media (max-width: 980px) {
+  .row.two-col { grid-template-columns: 1fr; }
+}

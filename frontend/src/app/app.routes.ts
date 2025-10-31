@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -45,6 +46,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
+    path: 'admin',
+    loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'orders/:orderId',
+    loadComponent: () => import('./pages/orders/orders.component').then(m => m.OrdersComponent)
+  },
+  {
     path: 'orders',
     loadComponent: () => import('./pages/orders/orders.component').then(m => m.OrdersComponent)
   },
@@ -55,6 +65,11 @@ export const routes: Routes = [
   {
     path: 'payment/:orderId',
     loadComponent: () => import('./pages/payment/payment').then(m => m.Payment),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'order-success/:orderId',
+    loadComponent: () => import('./pages/order-success/order-success.component').then(m => m.OrderSuccessComponent),
     canActivate: [authGuard]
   },
   {
