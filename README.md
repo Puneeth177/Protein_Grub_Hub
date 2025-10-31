@@ -66,7 +66,7 @@ frontend/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd "My First Project"
+   cd "Protein_Grub_Hub"
    ```
 
 2. **Install dependencies**
@@ -77,17 +77,12 @@ frontend/
 
 3. **Start development server**
    ```bash
-   ng serve
+   npm start
    ```
 
 4. **Open your browser**
    Navigate to `http://localhost:4200`
 
-### Build for Production
-
-```bash
-ng build --configuration production
-```
 
 ## 🎨 Design System
 
