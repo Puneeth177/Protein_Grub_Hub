@@ -8,12 +8,21 @@
   padding: 20px;
 }
 
-.header {
+.admin-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text);
 }
+.admin-header h1 { margin: 0; color: var(--color-text); font-weight: 700; }
+
+/* Buttons already use theme variables; ensure smooth theme transitions */
+.btn, .btn-outline { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
 
 /* Old .grid no longer used for primary layout */
 

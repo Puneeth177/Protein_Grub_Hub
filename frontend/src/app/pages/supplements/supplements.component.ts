@@ -10,47 +10,38 @@ import { DietModeService, DietMode } from '../../services/diet-mode.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-meals',
+  selector: 'app-supplements',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './meals.component.html',
-  styleUrls: ['./meals.component.css']
+  templateUrl: './supplements.component.html',
+  styleUrls: ['./supplements.component.css']
 })
-export class MealsComponent implements OnInit, OnDestroy {
-
+export class SupplementsComponent implements OnInit, OnDestroy {
   meals: Meal[] = [];
   filteredMeals: Meal[] = [];
   isLoading = true;
-  
+
   // Filters
   searchTerm = '';
-  selectedCategory = '';
+  selectedCategory = 'supplement';
   minProtein = 0;
   maxProtein = 100;
   minPrice = 0;
-  maxPrice = 500;
+  maxPrice = 10000;
+  // For Supplements, use tag-based filters (bar, powder, isolate)
   selectedDietary: string[] = [];
   sortBy = 'name';
-  
-  categories = [
-    { id: '', label: 'All Categories' },
-    { id: 'main-course', label: 'Main Course' },
-    { id: 'snack', label: 'Snacks' },
-    { id: 'supplement', label: 'Supplements' },
-    { id: 'breakfast', label: 'Breakfast' },
-    { id: 'lunch', label: 'Lunch' },
-    { id: 'dinner', label: 'Dinner' }
-  ];
-  
+
+  // Category dropdown removed from UI; keep internal value only
+  categories = [] as any[];
+
+  // Replace dietary filters with tag filters relevant to supplements
   dietaryOptions = [
-    { id: 'vegan', label: 'Vegan' },
-    { id: 'vegetarian', label: 'Vegetarian' },
-    { id: 'plant-based', label: 'Plant-based' },
-    { id: 'high-protein', label: 'High Protein' },
-    { id: 'chicken', label: 'Chicken' },
-    { id: 'nonveg', label: 'Non-veg' }
+    { id: 'bar', label: 'Bar' },
+    { id: 'powder', label: 'Powder' },
+    { id: 'isolate', label: 'Isolate' }
   ];
-  
+
   sortOptions = [
     { id: 'name', label: 'Name' },
     { id: 'protein', label: 'Protein (High to Low)' },
@@ -59,6 +50,9 @@ export class MealsComponent implements OnInit, OnDestroy {
   ];
 
   private cartSub?: Subscription;
+  private modeSub?: Subscription;
+  private dietMode: DietMode = 'neutral';
+
   // map of client mealId and name-based keys to quantity in cart
   cartMap: { [key: string]: number } = {};
 
@@ -69,45 +63,33 @@ export class MealsComponent implements OnInit, OnDestroy {
     private authService: AuthService
   ) {}
 
-  private modeSub?: Subscription;
-  private dietMode: DietMode = 'neutral';
+  ngOnDestroy(): void {
+    if (this.cartSub) this.cartSub.unsubscribe();
+    if (this.modeSub) this.modeSub.unsubscribe();
+  }
 
-ngOnDestroy(): void {
-  if (this.cartSub) this.cartSub.unsubscribe();
-  if (this.modeSub) this.modeSub.unsubscribe();
-}
   ngOnInit() {
-
-    // Fetch meals from API
     this.modeSub = this.dietModeService.getMode$().subscribe(mode => {
       this.dietMode = mode;
       this.applyFilters();
     });
-    
-    // Prefill selected dietary filters from saved user preferences
-    this.authService.currentUser$.subscribe(user => {
-      const prefs = (user as any)?.dietaryPreferences;
-      if (Array.isArray(prefs) && prefs.length) {
-        this.selectedDietary = [...prefs];
-        this.applyFilters();
-      }
-    });
 
-    // Load meals from API
+    // Do not preload general dietary preferences for supplements tag filters
+
     this.apiService.getMeals().subscribe({
       next: (meals: Meal[]) => {
+        // Pre-filter to supplements domain by default; keep full list for category switch
         this.meals = meals;
         this.filteredMeals = this.meals;
         this.isLoading = false;
         this.applyFilters();
       },
       error: (err: any) => {
-        console.error('Error loading meals:', err);
+        console.error('Error loading supplements:', err);
         this.isLoading = false;
       }
     });
 
-    // Subscribe to cart updates so UI reflects quantities
     this.cartSub = this.cartService.cart$.subscribe(items => {
       this.cartMap = {};
       if (items && items.length) {
@@ -122,13 +104,11 @@ ngOnDestroy(): void {
               const normCanon = this.normName(canon);
               const normRaw = this.normName(it.meal.name);
 
-              // raw and canonical name keys
               this.cartMap[`name:${it.meal.name}`] = qty;
               this.cartMap[`name:${canon}`] = qty;
               this.cartMap[`norm:${normRaw}`] = qty;
               this.cartMap[`norm:${normCanon}`] = qty;
 
-              // also map to the client-side static id when available (match either raw or canonical)
               const clientMatch = this.meals.find(m => {
                 const mNorm = this.normName(m.name);
                 return mNorm === normCanon || mNorm === normRaw;
@@ -146,7 +126,11 @@ ngOnDestroy(): void {
   applyFilters() {
     let filtered = [...this.meals];
 
-    // Search filter
+    // Limit to supplements by default
+    if (this.selectedCategory) {
+      filtered = filtered.filter(meal => meal.category === this.selectedCategory);
+    }
+
     if (this.searchTerm) {
       filtered = filtered.filter(meal =>
         meal.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -154,38 +138,23 @@ ngOnDestroy(): void {
       );
     }
 
-    // Category filter
-    if (this.selectedCategory) {
-      filtered = filtered.filter(meal => meal.category === this.selectedCategory);
-    }
-
-    // Protein range filter
     filtered = filtered.filter(meal =>
       meal.protein_grams >= this.minProtein && meal.protein_grams <= this.maxProtein
     );
 
-    // Price range filter
     filtered = filtered.filter(meal =>
       meal.price >= this.minPrice && meal.price <= this.maxPrice
     );
 
-    // Dietary preferences filter (with fallback to generic tags mapping)
+    // Tag-based filters (bar, powder, isolate) - require ALL selected tags
     if (this.selectedDietary.length > 0) {
-      const andFiltered = filtered.filter(meal => {
-        const tags = this.mapDietaryTags(meal);
-        return this.selectedDietary.every(diet => tags.includes(diet));
+      filtered = filtered.filter(meal => {
+        const tags = Array.isArray(meal.tags) ? meal.tags.map(t => String(t).toLowerCase()) : [];
+        return this.selectedDietary.every(tag => tags.includes(tag));
       });
-      if (andFiltered.length > 0) {
-        filtered = andFiltered;
-      } else {
-        filtered = filtered.filter(meal => {
-          const tags = this.mapDietaryTags(meal);
-          return this.selectedDietary.some(diet => tags.includes(diet));
-        });
-      }
     }
 
-    // Diet mode filter (neutral shows all)
+    // Diet mode: explicit behavior for supplements
     if (this.dietMode === 'veg') {
       filtered = filtered.filter(m => {
         const tags = this.mapDietaryTags(m);
@@ -194,17 +163,16 @@ ngOnDestroy(): void {
     } else if (this.dietMode === 'nonveg') {
       filtered = filtered.filter(m => {
         const tags = this.mapDietaryTags(m);
-        return !tags.includes('vegetarian') && !tags.includes('vegan');
+        return tags.includes('nonveg');
       });
     }
 
-    // Sort: push out-of-stock to bottom, then apply selected sort within groups
     filtered.sort((a, b) => {
       const aInv = Number(a?.inventory);
       const bInv = Number(b?.inventory);
       const aOOS = Number.isFinite(aInv) && aInv <= 0 ? 1 : 0;
       const bOOS = Number.isFinite(bInv) && bInv <= 0 ? 1 : 0;
-      if (aOOS !== bOOS) return aOOS - bOOS; // in-stock (0) before out-of-stock (1)
+      if (aOOS !== bOOS) return aOOS - bOOS;
 
       switch (this.sortBy) {
         case 'protein':
@@ -237,14 +205,17 @@ ngOnDestroy(): void {
     if (lower.includes('paleo')) derived.push('paleo');
     if (lower.includes('gluten-free') || lower.includes('glutenfree')) derived.push('gluten-free');
     if (lower.includes('dairy-free') || lower.includes('dairyfree')) derived.push('dairy-free');
-    const mentionsChicken = lower.includes('chicken') || nameL.includes('chicken') || descL.includes('chicken');
-    if (mentionsChicken) derived.push('chicken');
-    // Non-veg: explicit tag or meat/fish keywords (exclude 'egg' to keep pancakes/bars/smoothies vegetarian by default)
+    // Detect explicit non-veg (egg/meat/fish/chicken)
+    const eggRegex = /\begg\b|\begg\s*white\b|\begg-white\b/;
     const meatFishRegex = /\b(fish|salmon|tuna|beef|mutton|prawn|shrimp|meat|chicken)\b/;
-    const mentionsNonVeg = lower.includes('non-veg') || lower.includes('nonveg') || mentionsChicken || meatFishRegex.test(nameL) || meatFishRegex.test(descL);
+    const mentionsNonVeg = lower.includes('non-veg') || lower.includes('nonveg') || eggRegex.test(nameL) || eggRegex.test(descL) || meatFishRegex.test(nameL) || meatFishRegex.test(descL);
     if (mentionsNonVeg) derived.push('nonveg');
+    // If not explicitly vegan or nonveg, default supplements to vegetarian
     const unique = Array.from(new Set(derived));
-    // If explicitly veg, remove nonveg tag to avoid conflicts
+    if (!unique.includes('vegan') && !unique.includes('nonveg')) {
+      unique.push('vegetarian');
+    }
+    // If explicitly veg or vegan, remove nonveg tag to avoid conflicts
     if (unique.includes('vegetarian') || unique.includes('vegan')) {
       return unique.filter(t => t !== 'nonveg');
     }
@@ -259,29 +230,18 @@ ngOnDestroy(): void {
       this.selectedDietary.push(dietary);
     }
     this.applyFilters();
-    // Persist preferences to backend profile (best-effort)
-    try {
-      this.authService.updateUser({ dietaryPreferences: [...this.selectedDietary] }).subscribe({
-        next: () => {},
-        error: () => {}
-      });
-    } catch {}
+    // Do not persist tag filter selections as user dietary preferences
   }
 
   clearDietary() {
     this.selectedDietary = [];
     this.applyFilters();
-    try {
-      this.authService.updateUser({ dietaryPreferences: [] }).subscribe({ next: () => {}, error: () => {} });
-    } catch {}
   }
 
   addToCart(event: Event, meal: Meal) {
-    // Prevent any parent click handlers / navigation
     event?.stopPropagation();
     event?.preventDefault();
     this.cartService.addToCart(meal, 1);
-    // You could add a toast notification here
   }
 
   getQuantity(mealId: string, mealName?: string): number {
@@ -310,7 +270,7 @@ ngOnDestroy(): void {
     const map: Record<string, string> = {
       'Grilled Chicken Power Bowl': 'High Protein Chicken Bowl',
       'Salmon & Sweet Potato': 'Salmon Protein Pack',
-      'Plant-Based Protein Stack': 'Chicken Protein Wrap'
+      'Plant-Based Protein Stack': 'Turkey Protein Wrap'
     };
     return map[name] || name;
   }
@@ -356,24 +316,20 @@ ngOnDestroy(): void {
 
   clearFilters() {
     this.searchTerm = '';
-    this.selectedCategory = '';
+    this.selectedCategory = 'supplement';
     this.minProtein = 0;
     this.maxProtein = 100;
     this.minPrice = 0;
-    this.maxPrice = 500;
+    this.maxPrice = 10000;
     this.selectedDietary = [];
     this.sortBy = 'name';
     this.applyFilters();
-    // Persist cleared dietary preferences
-    try {
-      this.authService.updateUser({ dietaryPreferences: [] }).subscribe({ next: () => {}, error: () => {} });
-    } catch {}
   }
 
   getFilterCount(): number {
     let count = 0;
     if (this.searchTerm) count++;
-    if (this.selectedCategory) count++;
+    if (this.selectedCategory && this.selectedCategory !== 'supplement') count++;
     if (this.minProtein > 0 || this.maxProtein < 100) count++;
     if (this.minPrice > 0 || this.maxPrice < 500) count++;
     if (this.selectedDietary.length > 0) count++;

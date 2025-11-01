@@ -16,6 +16,7 @@
       <ul class="nav-list">
         <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
         <li><a routerLink="/meals" routerLinkActive="active">Browse Meals</a></li>
+        <li><a routerLink="/supplements" routerLinkActive="active">Supplements</a></li>
         <ng-container *ngIf="currentUser$ | async">
           <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
         </ng-container>
@@ -72,4 +73,4 @@
       </ng-template>
     </div>
   </div>
-</header>
+</header>

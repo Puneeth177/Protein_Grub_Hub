@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap, catchError, of } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap, catchError, of, firstValueFrom } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CartItem } from '../models/order.model';
 import { Meal } from '../models/meal.model';
@@ -13,6 +13,7 @@ export class CartService {
   private cartItems: CartItem[] = [];
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   private readonly apiUrl = environment.apiUrl?.trim() || 'http://localhost:3000/api';
+  private readonly guestKey = 'guest_cart';
 
   // Public method to force-refresh cart from server
   refreshFromServer(): void {
@@ -56,9 +57,10 @@ export class CartService {
     // Subscribe to auth changes to fetch cart when user logs in
     this.authService.currentUser$.subscribe(user => {
       if (user && this.authService.isAuthenticated()) {
-        this.fetchCartFromServer();
+        // Merge any guest cart into server cart, then refresh
+        this.mergeGuestCartIntoServer().then(() => this.fetchCartFromServer());
       } else {
-        // Clear cart when user logs out
+        // On logout: clear only authenticated cart, keep guest cart stored
         this.clearCart();
       }
     });
@@ -96,6 +98,25 @@ export class CartService {
   }
 
   addToCart(meal: Meal, quantity: number = 1, customizations?: string[]): void {
+    // If not authenticated, stash in guest cart and prompt to login; do not update live cart state
+    if (!this.authService.isAuthenticated()) {
+      const guest: CartItem[] = this.getGuestCart();
+      const normArr = (v: any) => JSON.stringify(Array.isArray(v) ? v : []);
+      const idx = guest.findIndex(
+        (it: CartItem) => String(it?.meal?._id) === String(meal._id) && normArr(it.customizations) === normArr(customizations)
+      );
+      if (idx > -1) {
+        guest[idx].quantity += quantity;
+      } else {
+        guest.push({ meal, quantity, customizations: Array.isArray(customizations) ? customizations : [] });
+      }
+      this.saveGuestCart(guest);
+      if (typeof window !== 'undefined') {
+        alert('Please Login or Sign Up first to add items to your cart. Your selection has been saved and will appear after you log in.');
+      }
+      return;
+    }
+
     const normArr = (v: any) => JSON.stringify(Array.isArray(v) ? v : []);
     const existingItemIndex = this.cartItems.findIndex(
       item => item.meal._id === meal._id &&
@@ -260,5 +281,86 @@ export class CartService {
             }
           });
       }
+  }
+
+  // Guest cart helpers
+  private getGuestCart(): CartItem[] {
+    if (typeof window === 'undefined' || !window.localStorage) return [];
+    try {
+      const raw = localStorage.getItem(this.guestKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  private saveGuestCart(items: CartItem[]): void {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    localStorage.setItem(this.guestKey, JSON.stringify(items));
+  }
+
+  private clearGuestCart(): void {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    localStorage.removeItem(this.guestKey);
+  }
+
+  // Merge guest cart into server cart after login, atomically
+  private async mergeGuestCartIntoServer(): Promise<void> {
+    try {
+      const guest: CartItem[] = this.getGuestCart();
+      if (!guest.length) return;
+
+      const headers = this.getAuthHeaders();
+      // Fetch current server cart
+      const serverResp = await firstValueFrom(this.http.get<{ cart?: { items: CartItem[] } }>(`${this.apiUrl}/cart`, { headers }));
+      const serverItems: CartItem[] = serverResp?.cart?.items ?? [];
+
+      // Merge by product id or fallback name+customizations
+      const normArr = (v: any) => JSON.stringify(Array.isArray(v) ? v : []);
+      const keyOf = (it: CartItem) => {
+        const id = it?.meal?._id || '';
+        const name = (it?.meal?.name || '').toLowerCase();
+        return (id && /^[0-9a-fA-F]{24}$/.test(id)) ? `id:${id}|c:${normArr(it.customizations)}` : `n:${name}|c:${normArr(it.customizations)}`;
+      };
+
+      const mergedMap = new Map<string, CartItem>();
+      for (const it of serverItems) {
+        mergedMap.set(keyOf(it), { ...it });
+      }
+      for (const it of guest) {
+        const k = keyOf(it);
+        if (mergedMap.has(k)) {
+          const m = mergedMap.get(k)!;
+          mergedMap.set(k, { ...m, quantity: (m.quantity || 0) + (it.quantity || 0) });
+        } else {
+          mergedMap.set(k, { ...it });
+        }
+      }
+
+      const merged = Array.from(mergedMap.values());
+      // Build payload consistent with server expectations
+      const itemsPayload = merged.map(ci => {
+        const id = ci?.meal?._id;
+        const isValidId = typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+        return isValidId
+          ? { productId: id, quantity: ci.quantity, customizations: ci.customizations }
+          : {
+              meal: {
+                _id: id,
+                name: ci?.meal?.name,
+                price: ci?.meal?.price,
+                description: ci?.meal?.description ?? (ci as any)?.meal?.desc,
+                calories: ci?.meal?.calories,
+                protein_grams: ci?.meal?.protein_grams ?? (ci as any)?.meal?.protein,
+                image_url: ci?.meal?.image_url
+              },
+              quantity: ci.quantity,
+              customizations: ci.customizations
+            };
+      });
+
+      await firstValueFrom(this.http.post(`${this.apiUrl}/cart`, { items: itemsPayload }, { headers }));
+      this.clearGuestCart();
+    } catch (e) {
+      console.warn('Failed merging guest cart into server:', e);
+    }
   }
 }

@@ -1,0 +1,201 @@
+<div class="meals-container reveal" role="main" aria-label="Browse Supplements">
+  <div class="meals-header">
+    <h1 id="supplements-title">Browse Supplements</h1>
+    <p>Shop protein powders, bars, and performance supplements</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section reveal" role="region" aria-label="Supplement Filters">
+    <div class="filters-header">
+      <h3>Filters</h3>
+    </div>
+
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-group">
+        <label for="search-supplements">Search</label>
+        <input
+          id="search-supplements"
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          placeholder="Search supplements..."
+          class="filter-input"
+          [attr.aria-label]="'Search supplements'"
+        />
+      </div>
+
+      <!-- Protein Range -->
+      <div class="filter-group">
+        <label>Protein Range (g)</label>
+        <div class="range-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minProtein"
+            (input)="applyFilters()"
+            placeholder="Min"
+            class="range-input"
+          />
+          <span>to</span>
+          <input
+            type="number"
+            [(ngModel)]="maxProtein"
+            (input)="applyFilters()"
+            placeholder="Max"
+            class="range-input"
+          />
+        </div>
+      </div>
+
+      <!-- Price Range -->
+      <div class="filter-group">
+        <label>Price Range (₹)</label>
+        <div class="range-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            (input)="applyFilters()"
+            placeholder="Min"
+            class="range-input"
+          />
+          <span>to</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            (input)="applyFilters()"
+            placeholder="Max"
+            class="range-input"
+          />
+        </div>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-group">
+        <label for="sort-select">Sort By</label>
+        <select 
+          id="sort-select"
+          [(ngModel)]="sortBy" 
+          (change)="applyFilters()"
+          class="filter-select"
+          [attr.aria-label]="'Sort supplements'"
+        >
+          <option *ngFor="let option of sortOptions" [value]="option.id">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dietary Preferences -->
+    <div class="dietary-filters">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;">
+        <label style="margin:0;">Supplement Type</label>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          (click)="clearDietary()"
+          *ngIf="selectedDietary.length > 0"
+        >
+          Clear Selected
+        </button>
+      </div>
+      <div class="dietary-tags" role="group" aria-label="Supplement Type Filters">
+        <button
+          type="button"
+          *ngFor="let diet of dietaryOptions"
+          class="dietary-tag"
+          [class.selected]="selectedDietary.includes(diet.id)"
+          (click)="toggleDietaryFilter(diet.id)"
+          [attr.aria-pressed]="selectedDietary.includes(diet.id)"
+          [attr.style]="selectedDietary.includes(diet.id) 
+            ? 'border-color:#22d3ee !important; color:#22d3ee !important; background:transparent !important;'
+            : ''"
+        >
+          {{ diet.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-section reveal" role="region" aria-label="Supplement Results">
+    <div class="results-header">
+      <h3 id="supplements-results">{{ filteredMeals.length }} items found</h3>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" *ngIf="isLoading" role="status" aria-live="polite">
+      <p>Loading supplements...</p>
+    </div>
+
+    <!-- Grid -->
+    <div class="meals-grid" *ngIf="!isLoading && filteredMeals.length > 0" role="list" aria-labelledby="supplements-results">
+      <div class="meal-card reveal" *ngFor="let meal of filteredMeals; trackBy: trackByMeal" role="listitem">
+        <div class="meal-image">
+          <img [src]="meal.image_url" [alt]="'Supplement: ' + meal.name + '. ' + (meal.description || '')" />
+          <div class="protein-badge">{{ meal.protein_grams }}g protein</div>
+        </div>
+        
+        <div class="meal-content">
+          <h4 class="meal-name">{{ meal.name }}</h4>
+          <p class="stock-line"
+             [attr.style]="(meal.inventory || 0) > 0 
+               ? 'color:#16a34a !important; border-color:#16a34a !important; background:transparent;'
+               : 'color:#ef4444 !important; border-color:#ef4444 !important; background:transparent;'">
+            <ng-container *ngIf="meal.inventory === 0">Out of stock</ng-container>
+            <ng-container *ngIf="meal.inventory && meal.inventory > 0">In stock: {{ meal.inventory }}</ng-container>
+            <ng-container *ngIf="meal.inventory === undefined">&nbsp;</ng-container>
+          </p>
+          <p class="meal-description">{{ meal.description }}</p>
+          
+          <div class="meal-tags" *ngIf="(meal.dietary_tags?.length || meal.tags?.length)">
+            <span class="tag" *ngFor="let tag of (meal.dietary_tags?.length ? meal.dietary_tags : meal.tags) | slice:0:3">
+              {{ tag }}
+            </span>
+          </div>
+          
+          <div class="meal-stats">
+            <div class="stat">
+              <span class="stat-label">Calories</span>
+              <span class="stat-value">{{ meal.calories }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Protein</span>
+              <span class="stat-value">{{ meal.protein_grams }}g</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Price</span>
+              <span class="stat-value">₹{{ meal.price }}</span>
+            </div>
+          </div>
+          
+          <div class="meal-actions">
+            <div *ngIf="getQuantity(meal._id, meal.name) === 0" class="add-bar" role="group" aria-label="Add to cart">
+              <button class="btn btn-primary add-full" (click)="addToCart($event, meal)" [disabled]="meal.inventory === 0"
+                [attr.aria-label]="(meal.inventory===0 ? 'Out of stock: ' : 'Add ') + meal.name + ' to cart'">
+                {{ meal.inventory === 0 ? 'Out of stock' : 'Add to Cart' }}
+              </button>
+            </div>
+
+            <div *ngIf="getQuantity(meal._id, meal.name) > 0" class="quantity-bar" role="group" aria-label="Adjust quantity">
+              <button type="button" class="qty-btn" (click)="decrease($event, meal)" aria-label="Decrease quantity">-</button>
+              <div class="qty-center">{{ meal.protein_grams }}g × {{ getQuantity(meal._id, meal.name) }}</div>
+              <button type="button" class="qty-btn" (click)="increase($event, meal)" [disabled]="meal.inventory && getQuantity(meal._id, meal.name) >= meal.inventory" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="!isLoading && filteredMeals.length === 0" role="alert" aria-live="polite">
+      <div class="no-results-content">
+        <h3>No supplements found</h3>
+        <p>Try adjusting your filters to see more results.</p>
+        <button class="btn btn-primary" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

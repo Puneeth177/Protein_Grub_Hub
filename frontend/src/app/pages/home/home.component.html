@@ -5,8 +5,8 @@
       <h1 class="hero-title">Your All-in-One Stop for Protein-Packed Power!</h1>
       <p class="hero-subtitle">Smart nutrition meets convenient delivery. Achieve your fitness goals with personalized, high-protein meals delivered to your door.</p>
       <div class="hero-actions">
-  <a routerLink="/register" class="btn btn-primary">Get Started</a>
-  <a routerLink="/meals" class="btn btn-secondary">Browse Meals</a>
+  <a *ngIf="!isLoggedIn" routerLink="/register" class="btn btn-primary">Get Started</a>
+  <a routerLink="/meals" class="btn btn-primary">Browse Meals</a>
       </div>
     </div>
     <div class="hero-image">

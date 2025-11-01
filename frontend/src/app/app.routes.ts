@@ -31,6 +31,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/meals/meals.component').then(m => m.MealsComponent)
   },
   {
+    path: 'supplements',
+    loadComponent: () => import('./pages/supplements/supplements.component').then(m => m.SupplementsComponent)
+  },
+  {
     path: 'cart',
     loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
     // Allow unauthenticated users to view/edit their cart locally.
