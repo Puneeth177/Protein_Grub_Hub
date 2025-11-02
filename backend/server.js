@@ -66,10 +66,10 @@ app.get('/api', (req, res) => {
 app.get('/', (req, res) => res.send('API OK'));
 app.use((req, res) => res.status(404).json({ ok: false, message: 'Not found' }));
 
-// Handle Angular routing
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/frontend/index.html'));
-});
+// // Handle Angular routing
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend/dist/frontend/index.html'));
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
