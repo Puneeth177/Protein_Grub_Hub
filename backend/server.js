@@ -63,6 +63,8 @@ app.use(express.static(path.join(__dirname, '../frontend/dist/frontend')));
 app.get('/api', (req, res) => {
     res.send('Protein Grub Hub API is running...');
 });
+app.get('/', (req, res) => res.send('API OK'));
+app.use((req, res) => res.status(404).json({ ok: false, message: 'Not found' }));
 
 // Handle Angular routing
 app.get('*', (req, res) => {
@@ -74,6 +76,19 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Something went wrong!' });
 });
+
+// Serve static files from the Angular app ONLY when explicitly enabled
+if (process.env.SERVE_FRONTEND === 'true') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist/frontend')));
+  // Handle Angular routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/frontend/index.html'));
+  });
+} else {
+  // Health route and 404 for non-API routes
+  app.get('/', (req, res) => res.send('API OK'));
+  app.use((req, res) => res.status(404).json({ ok: false, message: 'Not found' }));
+}
 
 // Server Initialization
 const PORT = process.env.PORT || 3000;
