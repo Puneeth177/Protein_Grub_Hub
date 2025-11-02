@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Protein Grub Hub icon logo">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Plate -->
+  <circle cx="96" cy="96" r="84" fill="url(#g2)" filter="url(#soft)"/>
+  <circle cx="96" cy="96" r="70" fill="#ffffff"/>
+
+  <!-- Dumbbell (protein/fitness) -->
+  <g transform="translate(96,96) rotate(-15)">
+    <rect x="-40" y="-8" width="80" height="16" rx="8" fill="#0f172a" opacity="0.85"/>
+    <rect x="-64" y="-14" width="16" height="28" rx="6" fill="#0f172a"/>
+    <rect x="48" y="-14" width="16" height="28" rx="6" fill="#0f172a"/>
+  </g>
+
+  <!-- Leaf (fresh/healthy) -->
+  <path d="M128 70c-10 1-21 7-27 16-6 8-9 18-8 28 10-1 20-5 28-11 9-7 15-17 17-28-3-1-6-1-10 0z" fill="url(#g1)"/>
+  <path d="M101 114c8-2 17-7 24-14" stroke="#065f46" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Fork (food) -->
+  <g transform="translate(58,58) rotate(35)">
+    <rect x="0" y="0" width="10" height="54" rx="5" fill="#0f172a"/>
+    <rect x="-8" y="-10" width="6" height="20" rx="2" fill="#0f172a"/>
+    <rect x="2" y="-10" width="6" height="20" rx="2" fill="#0f172a"/>
+    <rect x="12" y="-10" width="6" height="20" rx="2" fill="#0f172a"/>
+  </g>
+
+  <!-- Highlights -->
+  <circle cx="66" cy="58" r="6" fill="#ffffff" opacity="0.6"/>
+  <circle cx="58" cy="70" r="3" fill="#ffffff" opacity="0.6"/>
+</svg>

@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
 import { ThemeService } from '../../services/theme.service';
 import { NavAvatarComponent } from '../nav-avatar/nav-avatar.component';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, map } from 'rxjs';
 import { DietModeService } from '../../services/diet-mode.service';
 import type { DietMode } from '../../services/diet-mode.service';
 
@@ -19,6 +19,7 @@ import type { DietMode } from '../../services/diet-mode.service';
 export class HeaderComponent implements OnInit {
   currentUser$: Observable<any>;
   cartItemCount$: Observable<number>;
+  isDark$!: Observable<boolean>;
 
   // Separate states
   isNavOpen = false;
@@ -39,6 +40,7 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     this.modeSub = this.dietMode.getMode$().subscribe(mode => this.diet = mode);
+    this.isDark$ = this.themeService.currentTheme$.pipe(map(t => t.isDark));
   }
 
   toggleNavMenu() {

@@ -68,6 +68,14 @@
   align-items: flex-start;
 }
 
+/* Logo variants: default to dark variant in light mode */
+.nav-brand .logo .logo-dark-variant { display: inline-block; }
+.nav-brand .logo .logo-light-variant { display: none; }
+
+/* Swap when app is in dark theme (works with Angular view encapsulation) */
+:host-context(.dark-theme) .nav-brand .logo .logo-dark-variant { display: none; }
+:host-context(.dark-theme) .nav-brand .logo .logo-light-variant { display: inline-block; }
+
 .logo-text {
   font-size: 1.5rem;
   font-weight: bold;
