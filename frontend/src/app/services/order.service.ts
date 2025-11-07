@@ -18,7 +18,7 @@ export interface CreateOrderRequest {
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly apiUrl = environment.apiUrl?.trim() || 'http://localhost:3000/api';
+  private readonly apiUrl = (environment.apiUrl || '').replace(/\/$/, '');
 
   constructor(private http: HttpClient) {}
 

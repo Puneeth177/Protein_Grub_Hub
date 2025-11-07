@@ -22,7 +22,7 @@ export interface AvatarUploadResponse {
   providedIn: 'root'
 })
 export class AvatarService {
-  private readonly API_URL = environment.apiUrl?.trim() || 'http://localhost:3000/api';
+  private readonly API_URL = (environment.apiUrl || '').replace(/\/$/, '');
 
   constructor(private http: HttpClient) {}
 
