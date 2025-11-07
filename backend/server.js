@@ -28,7 +28,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
+    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023', 'https://proteingrubhub.netlify.app', 'https://protein-grubhub.vercel.app'],
     credentials: true
 }));
 
