@@ -25,18 +25,20 @@
               "src/styles/themes.css",
               "src/styles.css"
             ],
-            "allowedCommonJsDependencies": ["google-auth-library"]
+            "allowedCommonJsDependencies": ["google-auth-library"],
+            "outputPath": "dist/frontend"
           },
           "configurations": {
             "production": {
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "outputHashing": "all",
               "budgets": [
                 { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
                 { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
               ],
-              "outputHashing": "all",
-              "outputMode": "server",
-              "server": "src/main.server.ts",
-              "ssr": { "entry": "src/server.ts" }
+              "outputMode": "static"
             },
             "development": {
               "optimization": false,
