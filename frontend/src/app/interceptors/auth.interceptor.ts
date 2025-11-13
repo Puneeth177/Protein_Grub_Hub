@@ -2,7 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const API_URL = (environment.apiUrl || '').replace(/\/$/, '');
+  const API_URL = environment.apiUrl?.trim() || 'http://localhost:3000/api';
   const isServer = typeof window === 'undefined';
 
   // Skip if running on server

@@ -9,7 +9,7 @@ import { StorageService } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
-  private readonly API_URL = `${(environment.apiUrl || '').replace(/\/$/, '')}/reviews`;
+  private readonly API_URL = (environment.apiUrl?.trim() || 'http://localhost:3000/api') + '/reviews';
 
   constructor(private http: HttpClient, private storage: StorageService) {}
 

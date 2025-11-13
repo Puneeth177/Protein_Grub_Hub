@@ -22,7 +22,7 @@ export interface UserLogin {
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly apiUrl = (environment.apiUrl || '').replace(/\/$/, '');
+  private readonly apiUrl = environment.apiUrl?.trim() || 'http://localhost:3000/api';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 

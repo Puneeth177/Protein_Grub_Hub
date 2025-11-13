@@ -12,8 +12,7 @@ import { AuthService, User } from './auth.service';
 export class CartService {
   private cartItems: CartItem[] = [];
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
-  private readonly apiUrl = (environment.apiUrl || '').replace(/\/$/, '');
-
+  private readonly apiUrl = environment.apiUrl?.trim() || 'http://localhost:3000/api';
   private readonly guestKey = 'guest_cart';
 
   // Public method to force-refresh cart from server

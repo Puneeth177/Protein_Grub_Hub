@@ -14,7 +14,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023', 'https://proteingrubhub.netlify.app', 'https://protein-grubhub.vercel.app/'],
+        origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
         credentials: true
     }
 });
@@ -28,7 +28,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023', 'https://proteingrubhub.netlify.app', 'https://protein-grubhub.vercel.app'],
+    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:52023'],
     credentials: true
 }));
 

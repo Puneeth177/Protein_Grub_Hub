@@ -42,7 +42,7 @@ export interface AuthResponse {
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  private readonly API_URL = (environment.apiUrl || '').replace(/\/$/, '');
+  private readonly API_URL = environment.apiUrl?.trim() || 'http://localhost:3000/api';
 
   private isServer = typeof window === 'undefined';
 
