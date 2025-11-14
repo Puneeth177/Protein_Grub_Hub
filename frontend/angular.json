@@ -36,7 +36,13 @@
                 { "type": "anyComponentStyle", "maximumWarning": "15kB", "maximumError": "50kB" }
               ],
               "outputHashing": "all",
-              "outputMode": "static"
+              "outputMode": "static",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
