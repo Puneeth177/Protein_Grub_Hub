@@ -33,12 +33,10 @@
             "production": {
               "budgets": [
                 { "type": "initial", "maximumWarning": "2mb", "maximumError": "5MB" },
-                { "type": "anyComponentStyle", "maximumWarning": "10kB", "maximumError": "50kB" }
+                { "type": "anyComponentStyle", "maximumWarning": "15kB", "maximumError": "50kB" }
               ],
               "outputHashing": "all",
-              "outputMode": "server",
-              "server": "src/main.server.ts",
-              "ssr": { "entry": "src/server.ts" }
+              "outputMode": "static"
             },
             "development": {
               "optimization": false,
