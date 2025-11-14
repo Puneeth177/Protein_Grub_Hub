@@ -1,3 +1,4 @@
+<!-- orders.component.html -->
 <div class="orders-container">
   <div class="orders-header">
     <h1>My Orders</h1>
@@ -20,7 +21,7 @@
     <div class="filter-controls">
       <div class="filter-group">
         <label for="statusFilter">Filter by Status:</label>
-        <select id="statusFilter" [(ngModel)]="filterStatus" class="filter-select">
+        <select id="statusFilter" [(ngModel)]="filterStatus" (change)="applyFilter()" class="filter-select">
           <option value="all">All Orders</option>
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
@@ -41,7 +42,7 @@
     <!-- Orders List -->
     <div class="orders-list" *ngIf="!isLoading">
       <!-- Empty State -->
-      <div class="empty-orders" *ngIf="getFilteredOrders().length === 0">
+      <div class="empty-orders" *ngIf="filteredOrders.length === 0">
         <div class="empty-orders-content">
           <div class="empty-icon">📦</div>
           <h2>No Orders Found</h2>
@@ -52,16 +53,16 @@
       </div>
 
       <!-- Order Cards -->
-      <div class="order-card" *ngFor="let order of getFilteredOrders()">
+      <div class="order-card" *ngFor="let order of filteredOrders">
         <div class="order-header">
           <div class="order-info">
-            <h3>{{ order.orderNumber }}</h3>
+            <h3>#{{ order.orderNumber }}</h3>
             <p class="order-date">{{ formatDate(order.date) }}</p>
           </div>
           <div class="order-status">
             <span 
               class="status-badge" 
-              [style.background-color]="getStatusColor(order.status)"
+              [ngClass]="'status-' + order.status"
             >
               {{ getStatusText(order.status) }}
             </span>
@@ -71,9 +72,11 @@
         <div class="order-content">
           <div class="order-items">
             <div class="item-preview" *ngFor="let item of order.items.slice(0, 2)">
-              <img [src]="item.meal.image_url" [alt]="item.meal.name" class="item-image">
+              <img [src]="item.meal.image_url || 'assets/images/meal-placeholder.jpg'" 
+                   [alt]="item.meal.name || 'Meal'" 
+                   class="item-image">
               <div class="item-details">
-                <span class="item-name">{{ item.meal.name }}</span>
+                <span class="item-name">{{ item.meal.name || 'Meal' }}</span>
                 <span class="item-quantity">Qty: {{ item.quantity }}</span>
               </div>
             </div>
@@ -93,7 +96,7 @@
             </div>
             <div class="summary-row total">
               <span>Total Amount:</span>
-              <span>₹{{ order.total.toFixed(2) }}</span>
+              <span>₹{{ (order.total || 0).toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -121,8 +124,8 @@
   <div class="modal-overlay" *ngIf="selectedOrder" (click)="closeOrderDetails()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Order Details</h2>
-        <button class="close-btn" (click)="closeOrderDetails()">×</button>
+        <h2>Order #{{ selectedOrder.orderNumber }}</h2>
+        <button class="close-btn" (click)="closeOrderDetails()">&times;</button>
       </div>
 
       <div class="modal-body">
@@ -132,7 +135,7 @@
             <div class="details-grid">
               <div class="detail-item">
                 <label>Order Number:</label>
-                <span>{{ selectedOrder.orderNumber }}</span>
+                <span>#{{ selectedOrder.orderNumber }}</span>
               </div>
               <div class="detail-item">
                 <label>Order Date:</label>
@@ -140,14 +143,11 @@
               </div>
               <div class="detail-item">
                 <label>Status:</label>
-                <span 
-                  class="status-badge" 
-                  [style.background-color]="getStatusColor(selectedOrder.status)"
-                >
+                <span class="status-badge" [ngClass]="'status-' + selectedOrder.status">
                   {{ getStatusText(selectedOrder.status) }}
                 </span>
               </div>
-              <div class="detail-item">
+              <div class="detail-item" *ngIf="selectedOrder.deliveryAddress">
                 <label>Delivery Address:</label>
                 <span>{{ selectedOrder.deliveryAddress }}</span>
               </div>
@@ -166,16 +166,18 @@
             <h3>Order Items</h3>
             <div class="items-list">
               <div class="item-detail" *ngFor="let item of selectedOrder.items">
-                <img [src]="item.meal.image_url" [alt]="item.meal.name" class="item-image">
+                <img [src]="item.meal.image_url || 'assets/images/meal-placeholder.jpg'" 
+                     [alt]="item.meal.name || 'Meal'" 
+                     class="item-image">
                 <div class="item-info">
-                  <h4>{{ item.meal.name }}</h4>
-                  <div class="item-stats">
-                    <span>{{ item.meal.protein_grams }}g protein</span>
-                    <span>{{ item.meal.calories }} cal</span>
+                  <h4>{{ item.meal.name || 'Meal' }}</h4>
+                  <div class="item-stats" *ngIf="item.meal">
+                    <span *ngIf="item.meal.protein_grams">{{ item.meal.protein_grams }}g protein</span>
+                    <span *ngIf="item.meal.calories">{{ item.meal.calories }} cal</span>
                     <span>Qty: {{ item.quantity }}</span>
                   </div>
                 </div>
-                <div class="item-price">
+                <div class="item-price" *ngIf="item.meal?.price">
                   <span class="unit-price">₹{{ item.meal.price }} each</span>
                   <span class="total-price">₹{{ (item.meal.price * item.quantity).toFixed(2) }}</span>
                 </div>
@@ -188,34 +190,76 @@
             <div class="price-breakdown">
               <div class="price-row">
                 <span>Subtotal:</span>
-                <span>₹{{ selectedOrder.subtotal.toFixed(2) }}</span>
+                <span>₹{{ (selectedOrder.subtotal || 0).toFixed(2) }}</span>
               </div>
               <div class="price-row">
                 <span>Delivery Fee:</span>
                 <span *ngIf="selectedOrder.deliveryFee > 0">₹{{ selectedOrder.deliveryFee.toFixed(2) }}</span>
-                <span *ngIf="selectedOrder.deliveryFee === 0" class="free-text">FREE</span>
+                <span *ngIf="!selectedOrder.deliveryFee || selectedOrder.deliveryFee === 0" class="free-text">FREE</span>
               </div>
-              <div class="price-row">
+              <div class="price-row" *ngIf="selectedOrder.tax">
                 <span>Tax:</span>
                 <span>₹{{ selectedOrder.tax.toFixed(2) }}</span>
               </div>
               <div class="price-row total-row">
                 <span>Total:</span>
-                <span>₹{{ selectedOrder.total.toFixed(2) }}</span>
+                <span>₹{{ (selectedOrder.total || 0).toFixed(2) }}</span>
               </div>
             </div>
 
-            <div class="nutrition-summary">
+            <div class="nutrition-summary" *ngIf="getTotalProtein(selectedOrder) > 0 || getTotalCalories(selectedOrder) > 0">
               <h4>Total Nutrition</h4>
               <div class="nutrition-stats">
-                <div class="nutrition-stat">
+                <div class="nutrition-stat" *ngIf="getTotalProtein(selectedOrder) > 0">
                   <span class="nutrition-label">Protein</span>
                   <span class="nutrition-value">{{ getTotalProtein(selectedOrder) }}g</span>
                 </div>
-                <div class="nutrition-stat">
+                <div class="nutrition-stat" *ngIf="getTotalCalories(selectedOrder) > 0">
                   <span class="nutrition-label">Calories</span>
                   <span class="nutrition-value">{{ getTotalCalories(selectedOrder) }}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Review Section -->
+          <div class="review-section" *ngIf="selectedOrder.status === 'delivered'">
+            <div class="section-divider"></div>
+            <h3>Rate Your Order</h3>
+            
+            <div class="review-prompt" *ngIf="!showReviewForm[selectedOrder._id] && !orderReviews[selectedOrder._id]">
+              <p>How was your order? We'd love to hear your feedback!</p>
+              <button class="btn btn-primary" (click)="toggleReviewForm(selectedOrder._id)">
+                Leave a Review
+              </button>
+            </div>
+            
+            <div class="review-form" *ngIf="showReviewForm[selectedOrder._id]">
+              <app-order-review-form 
+                [orderId]="selectedOrder._id"
+                [mealId]="getFirstMealId(selectedOrder)"
+                [mealName]="getFirstMealName(selectedOrder)"
+                (reviewSubmitted)="onReviewSubmit($event)"
+                (reviewSkipped)="toggleReviewForm(selectedOrder._id)">
+              </app-order-review-form>
+            </div>
+
+            <!-- Show review details if review exists -->
+            <div *ngIf="orderReviews[selectedOrder._id]">
+              <div class="review-details">
+                <div class="rating">
+                  <span *ngFor="let star of [1,2,3,4,5]">
+                    <i [class.fas]="star <= (orderReviews[selectedOrder._id]?.rating || 0)" 
+                      [class.far]="star > (orderReviews[selectedOrder._id]?.rating || 0)" 
+                      class="fa-star"></i>
+                  </span>
+                </div>
+                <p class="review-comment" *ngIf="orderReviews[selectedOrder._id]?.comment">
+                  {{ orderReviews[selectedOrder._id].comment }}
+                </p>
+                <small class="review-date" *ngIf="orderReviews[selectedOrder._id]?.date">
+                  Reviewed on {{ orderReviews[selectedOrder._id].date | date:'MMM d, y, h:mm a' }}
+                </small>
               </div>
             </div>
           </div>

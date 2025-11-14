@@ -55,11 +55,6 @@
         <p>Get personalized meal suggestions based on your fitness goals and dietary preferences.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">📱</div>
-        <h3>Seamless Health App Integration</h3>
-        <p>Connect with your favorite fitness apps to sync your activity and nutrition data.</p>
-      </div>
-      <div class="feature">
         <div class="feature-icon">⭐</div>
         <h3>Full Meal Customization</h3>
         <p>Customize every meal to match your taste preferences and dietary restrictions.</p>
@@ -68,13 +63,10 @@
   </div>
 </section>
 
-<!-- Social Proof Section -->
-<section class="social-proof reveal">
+<!-- Customer Reviews Section -->
+<section class="customer-reviews reveal">
   <div class="container">
-    <h2 class="section-title">What Our Customers Say</h2>
-    <div class="steps">
-    <app-review-list [productId]="'home_testimonials'"></app-review-list>
-    </div>
+    <app-review-list [showAddReviewButton]="false"></app-review-list>
   </div>
 </section>
 

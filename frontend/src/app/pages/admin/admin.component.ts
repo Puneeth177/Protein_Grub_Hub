@@ -2,9 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../services/api.service';
 import { OrderService } from '../../services/order.service';
 import { Meal } from '../../models/meal.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-admin',
@@ -18,7 +20,23 @@ export class AdminComponent implements OnInit {
   products: Meal[] = [];
   isLoading = true;
   error = '';
-  statusOptions = ['pending','confirmed','preparing','out-for-delivery','delivered','cancelled'];
+  // Order status options - must match backend's enum
+  statusOptions = [
+    'pending',
+    'processing',
+    'completed',  // This is used instead of 'delivered' in the backend
+    'cancelled',
+    'out-for-delivery',
+    'delivered'   // This is used instead of 'completed' in the frontend
+  ];
+  
+  // Map frontend status to backend status if needed
+  private mapToBackendStatus(status: string): string {
+    const statusMap: {[key: string]: string} = {
+      // Add any mappings if needed between frontend and backend statuses
+    };
+    return statusMap[status] || status;
+  }
 
   // UI state
   toasts: { id: number; text: string; type: 'success'|'error'|'info' }[] = [];
@@ -49,43 +67,175 @@ export class AdminComponent implements OnInit {
     dietary_tags: [] as string[],
   };
 
-  constructor(private api: ApiService, private ordersApi: OrderService) {}
+  constructor(private api: ApiService, private orderService: OrderService, private http: HttpClient) {}
 
-  ngOnInit(): void {
-    this.reload();
+  async ngOnInit(): Promise<void> {
+    await this.loadUndeliveredOrders();
+    this.loadProducts();
   }
 
   trackById(_index: number, item: any) { return item?._id || _index; }
 
-  reload() {
+  async loadUndeliveredOrders(): Promise<any[]> {
     this.isLoading = true;
-    this.ordersApi.getOrders().subscribe({
-      next: (orders) => {
-        this.orders = orders || [];
-        this.isLoading = false;
-      },
-      error: () => { this.isLoading = false; }
-    });
+    this.error = '';
+    try {
+      console.log('Fetching undelivered orders...');
+      const url = `${environment.apiUrl}/orders/admin/undelivered`;
+      console.log('API URL:', url);
+      
+      const orders = await this.http.get<any[]>(url, { 
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }).toPromise();
+      
+      if (!orders) {
+        throw new Error('No orders returned from server');
+      }
+      
+      this.orders = orders;
+      console.log('Successfully loaded undelivered orders:', this.orders);
+      return orders;
+      
+      if (this.orders.length === 0) {
+        this.toast('No undelivered orders found', 'info');
+      }
+    } catch (err: any) {
+      console.error('Error loading undelivered orders:', err);
+      const errorMessage = err.error?.message || 
+                         err.message || 
+                         'Failed to load undelivered orders. Please try again.';
+      
+      this.error = errorMessage;
+      this.toast(errorMessage, 'error');
+      
+      // If it's an authentication error, suggest logging in again
+      if (err.status === 401 || err.status === 403) {
+        this.toast('Please log in as an admin to view orders', 'error');
+      }
+      return [];
+    } finally {
+      this.isLoading = false;
+    }
+  }
 
+  loadProducts() {
     this.api.getMeals().subscribe({
       next: (meals) => { this.products = meals || []; },
       error: () => {}
     });
   }
 
-  // Orders
-  updateOrderStatus(orderId: string, status: string) {
-    if (!orderId) return;
-    this.savingOrderId = orderId;
-    this.ordersApi.updateOrderStatus(orderId, status).subscribe({
-      next: (o) => {
-        const idx = this.orders.findIndex(or => or._id === o._id);
-        if (idx > -1) this.orders[idx] = o;
-        this.toast('Order status updated', 'success');
-        this.savingOrderId = null;
-      },
-      error: () => { this.toast('Failed to update order', 'error'); this.savingOrderId = null; }
+  // Handle status change from dropdown
+  onStatusChange(order: any, newStatus: string) {
+    console.log('Status change detected:', {
+      orderId: order._id,
+      currentStatus: order.status,
+      newStatus: newStatus,
+      statusChanged: order.status !== newStatus
     });
+    
+    if (order.status === newStatus) {
+      console.log('Status not changed, skipping update');
+      return;
+    }
+    
+    // Don't update the order status yet - wait for the backend to confirm
+    this.updateOrderStatus(order, newStatus);
+  }
+
+  // Update order status
+  async updateOrderStatus(order: any, status: string) {
+    // Map to backend status if needed
+    const backendStatus = this.mapToBackendStatus(status);
+    const orderId = order._id;
+    
+    console.log('Starting updateOrderStatus with:', {
+      orderId,
+      currentStatus: order.status,
+      newStatus: status,
+      backendStatus
+    });
+    
+    if (!orderId) {
+      console.error('Invalid order object or missing _id:', order);
+      this.toast('Invalid order data', 'error');
+      return;
+    }
+    
+    if (order.status === status) {
+      console.warn('Order status is already', status, 'for order:', orderId);
+      return;
+    }
+    
+    this.savingOrderId = order._id;
+    const originalStatus = order.status;
+    
+    try {
+      const url = `${environment.apiUrl}/orders/${order._id}/status`;
+      console.log('Updating order status:', { 
+        orderId: order._id, 
+        fromStatus: order.status, 
+        toStatus: status,
+        url 
+      });
+      
+      const response = await this.http.put<any>(
+        url, 
+        JSON.stringify({ status: backendStatus }), // Use mapped status
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      ).toPromise();
+      
+      console.log('Update response:', response);
+      
+      if (!response || !response._id) {
+        throw new Error('No response from server');
+      }
+      
+      // Update the order in the local array with the response data
+      const orderIndex = this.orders.findIndex(o => o._id === order._id);
+      if (orderIndex !== -1) {
+        this.orders[orderIndex] = response;
+      }
+      
+      // Reload orders to ensure we have the latest data
+      await this.loadUndeliveredOrders();
+      
+      this.toast(`Order ${order.orderNumber || order._id} updated to ${status}`, 'success');
+    } catch (err: any) {
+      console.error('Error updating order status:', err);
+      
+      // Revert the status in the UI on error
+      order.status = originalStatus;
+      
+      let errorMessage = 'Failed to update order status';
+      if (err.status === 404) {
+        errorMessage = 'Order not found. Please refresh the page.';
+      } else if (err.status === 401 || err.status === 403) {
+        errorMessage = 'Unauthorized. Please log in again.';
+      } else if (err.error?.message) {
+        errorMessage = err.error.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      this.toast(errorMessage, 'error');
+    } finally {
+      this.savingOrderId = null;
+    }
+  }
+
+  reload() {
+    this.loadUndeliveredOrders();
   }
 
   // Inventory

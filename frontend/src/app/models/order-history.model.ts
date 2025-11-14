@@ -1,9 +1,20 @@
+// Update the OrderHistory interface in order-history.model.ts
 export interface OrderHistory {
   _id: string;
   orderNumber: string;
   date: Date;
-  status: 'pending' | 'confirmed' | 'preparing' | 'out-for-delivery' | 'delivered' | 'cancelled';
-  items: OrderItem[];
+  status: string;
+  items: Array<{
+    meal: {
+      _id: string;
+      name: string;
+      price: number;
+      protein_grams: number;
+      calories: number;
+      image_url?: string;
+    };
+    quantity: number;
+  }>;
   subtotal: number;
   deliveryFee: number;
   tax: number;
@@ -11,6 +22,7 @@ export interface OrderHistory {
   deliveryAddress: string;
   estimatedDelivery?: Date;
   actualDelivery?: Date;
+  hasReview?: boolean; // Add this line
 }
 
 export interface OrderItem {

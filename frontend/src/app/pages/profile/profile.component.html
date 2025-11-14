@@ -187,31 +187,131 @@
       </div>
     </div>
 
-    <!-- Account Actions -->
+    <!-- Reviews Section -->
     <div class="profile-card">
       <div class="card-header">
-        <h2>Account Actions</h2>
+        <h2>My Reviews</h2>
       </div>
-
+      
       <div class="card-content">
-        <div class="action-buttons">
-          <a routerLink="/dashboard" class="btn btn-outline">
-            <span class="btn-icon">📊</span>
-            View Dashboard
-          </a>
-          <a routerLink="/orders" class="btn btn-outline">
-            <span class="btn-icon">📦</span>
-            Order History
-          </a>
-          <a routerLink="/meals" class="btn btn-outline">
-            <span class="btn-icon">🍽️</span>
-            Browse Meals
-          </a>
-          <button class="btn btn-danger" (click)="authService.logout()">
-            <span class="btn-icon">🚪</span>
-            Logout
-          </button>
+        <!-- Reviews List -->
+        <div class="reviews-list">
+          <div *ngIf="loadingReviews" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading your reviews...</p>
+          </div>
+          
+          <div *ngIf="!loadingReviews && userReviews.length === 0" class="no-reviews">
+            <p>You haven't left any reviews yet.</p>
+            <a routerLink="/meals" class="btn btn-primary">Browse Meals</a>
+          </div>
+          
+          <div *ngIf="!loadingReviews && userReviews.length > 0">
+            <div class="reviews-grid">
+              <div *ngFor="let review of visibleUserReviews" class="review-card">
+                <div class="review-header">
+                  <div class="user-avatar">{{ (review.author.name.charAt(0) || 'U') }}</div>
+                  <div class="user-info">
+                    <div class="user-header-row">
+                      <h4 class="user-name">{{ review.author.name || 'Anonymous' }}
+                        <span *ngIf="review.isVerified" class="verified-badge">✓</span>
+                      </h4>
+                      <div class="rating" [title]="review.rating + ' out of 5 stars'">
+                        <span *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= review.rating">★</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="review-comment">{{ review.comment }}</p>
+                <div *ngIf="review.mealName" class="reviewed-item">
+                  <span>Meal: </span>
+                  <strong>{{ review.mealName }}</strong>
+                </div>
+                <div class="review-footer">
+                  <span class="review-date">{{ formatDate(review.createdAt || review.date || '') }}</span>
+                  <button class="btn-text btn-danger" (click)="onDeleteReview(review.id)">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="more-controls" *ngIf="canToggleUserReviews">
+              <button class="btn btn-sm" type="button" (click)="toggleShowAllReviews()">
+                {{ showAllReviews ? 'Show less' : 'Show more' }}
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <!-- Health & Fitness Information -->
+  <div class="profile-card" *ngIf="onboardingData">
+    <div class="card-header">
+      <h2>Health & Fitness Profile</h2>
+      <a routerLink="/onboarding" class="btn btn-outline btn-sm">
+        Update Goals
+      </a>
+    </div>
+
+    <div class="card-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Fitness Goal</label>
+          <span>{{ getFitnessGoalText() }}</span>
+        </div>
+        <div class="info-item">
+          <label>Dietary Preferences</label>
+          <span>{{ getDietaryPreferencesText() }}</span>
+        </div>
+        <div class="info-item">
+          <label>Activity Level</label>
+          <span>{{ getActivityLevelText() }}</span>
+        </div>
+        <div class="info-item" *ngIf="onboardingData.healthInfo?.age">
+          <label>Age</label>
+          <span>{{ onboardingData.healthInfo.age }} years</span>
+        </div>
+        <div class="info-item" *ngIf="onboardingData.healthInfo?.weight">
+          <label>Weight</label>
+          <span>{{ onboardingData.healthInfo.weight }} kg</span>
+        </div>
+        <div class="info-item" *ngIf="onboardingData.healthInfo?.height">
+          <label>Height</label>
+          <span>{{ onboardingData.healthInfo.height }} cm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Actions -->
+  <div class="profile-card">
+    <div class="card-header">
+      <h2>Account Actions</h2>
+    </div>
+
+    <div class="card-content">
+      <div class="action-buttons">
+        <a routerLink="/dashboard" class="btn btn-outline">
+          <span class="btn-icon">📊</span>
+          View Dashboard
+        </a>
+        <a routerLink="/orders" class="btn btn-outline">
+          <span class="btn-icon">📦</span>
+          Order History
+        </a>
+        <a routerLink="/meals" class="btn btn-outline">
+          <span class="btn-icon">🍽️</span>
+          Browse Meals
+        </a>
+        <button class="btn btn-danger" (click)="authService.logout()">
+          <span class="btn-icon">🚪</span>
+          Logout
+        </button>
       </div>
     </div>
   </div>
@@ -219,10 +319,12 @@
   <!-- Not logged in state -->
   <div class="not-logged-in" *ngIf="!currentUser">
     <div class="not-logged-in-content">
-      <div class="icon">🔒</div>
-      <h2>Please Log In</h2>
-      <p>You need to be logged in to view your profile.</p>
-      <a routerLink="/login" class="btn btn-primary">Go to Login</a>
+      <h2>Welcome to Your Profile</h2>
+      <p>Please sign in to view and manage your profile information.</p>
+      <div class="auth-actions">
+        <a routerLink="/login" class="btn btn-primary">Sign In</a>
+        <a routerLink="/register" class="btn btn-outline">Create Account</a>
+      </div>
     </div>
   </div>
 </div>

@@ -1,0 +1,56 @@
+<div class="location-picker">
+  <div class="search-container">
+    <mat-form-field appearance="outline" class="search-input">
+      <mat-label>Search for an area, street name, or landmark</mat-label>
+      <input
+        matInput
+        #search
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Search for an area, street name, or landmark"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="current-location" (click)="loadCurrentLocation()">
+      <mat-icon>my_location</mat-icon>
+      <span>Use current location</span>
+    </div>
+  </div>
+
+  <div class="map-container" #mapContainer></div>
+
+  <div class="selected-location" *ngIf="selectedLocation">
+    <mat-icon>location_on</mat-icon>
+    <div class="address">
+      <div class="title">Selected Location</div>
+      <div class="text">{{ selectedLocation.address }}</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button
+      mat-raised-button
+      color="primary"
+      class="confirm-btn"
+      [disabled]="!selectedLocation"
+      (click)="confirmLocation()"
+    >
+      Confirm Location
+    </button>
+  </div>
+
+  <div class="search-results" *ngIf="searchResults.length > 0">
+    <mat-list>
+      <mat-list-item
+        *ngFor="let result of searchResults"
+        (click)="selectPlace(result)"
+      >
+        <mat-icon matListIcon>location_on</mat-icon>
+        <div matLine>{{ result.display_name }}</div>
+      </mat-list-item>
+    </mat-list>
+  </div>
+
+  <mat-spinner *ngIf="isLoading" diameter="40" class="spinner"></mat-spinner>
+</div>

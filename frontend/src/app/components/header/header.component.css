@@ -1,19 +1,26 @@
+/* Main header styles */
 .header {
   background: var(--color-surface);
   color: var(--color-text);
   padding: 0.75rem 0;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   border-bottom: 1px solid var(--color-border);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(var(--color-surface-rgb), 0.85);
 }
 
 .dark-theme .header {
-  background: #0c1a27;
+  background-color: rgba(12, 26, 39, 0.9);
   color: #e6eef5;
   box-shadow: 0 6px 30px rgba(0,0,0,0.4);
-  border-bottom: 1px solid rgba(230,238,245,0.12);
+  border-bottom: 1px solid rgba(230, 238, 245, 0.12);
 }
 
 .auth-buttons {
@@ -54,10 +61,11 @@
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 100%;
 }
 
 .nav-brand .logo {
@@ -104,34 +112,49 @@
 
 .nav-list {
   display: flex;
+  gap: 1.5rem;
   list-style: none;
   margin: 0;
-  padding: 0;
-  gap: 1.25rem;
+  padding: 0 1rem;
+  align-items: center;
+  height: 100%;
 }
 
 .nav-list a {
-  color: var(--color-text);
+  color: var(--text-color);
   text-decoration: none;
-  font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
-}
-
-.dark-theme .nav-list a {
-  color: #e6eef5;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .nav-list a:hover,
-.nav-list a.active {
-  background: rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
+.nav-list a:focus-visible,
+.nav-list a.theme-toggle:hover {
+  background-color: var(--color-primary-10);
+  color: var(--color-primary);
+  transform: scale(1.1);
 }
 
 .dark-theme .nav-list a:hover,
 .dark-theme .nav-list a.active {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1.5rem;
+  background: var(--color-background);
+  transition: background-color 0.3s ease;
+  border: 1px solid var(--color-border);
 }
 
 .nav-actions {
@@ -208,7 +231,7 @@
   visibility: hidden;
   transform: translateY(-10px);
   transition: all var(--transition-normal);
-  z-index: 1000;
+  z-index: 2001;
 }
 
 .dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
@@ -230,6 +253,22 @@
 .dropdown-menu a:hover,
 .dropdown-menu button:hover { background: var(--color-background); }
 
+.theme-toggle {
+  color: var(--color-text);
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
 .mobile-menu-toggle {
   display: none;
   flex-direction: column;
@@ -245,6 +284,57 @@
   background: currentColor;
   margin: 3px 0;
   transition: 0.3s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .nav-list {
+    gap: 0.75rem;
+  }
+  
+  .theme-toggle:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Improve nav items spacing */
+.nav-list > li:not(.theme-toggle-container) {
+  padding: 0.5rem 0;
+}
+
+/* Ensure consistent height for nav items */
+.nav-list > li > a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover effect for nav items */
+.nav-list > li > a:hover {
+  background-color: var(--color-primary-10);
+  color: var(--color-primary);
+}
+
+/* Active state for nav items */
+.nav-list > li > a.active {
+  font-weight: 600;
+  color: var(--color-primary);
+  position: relative;
+}
+
+.nav-list > li > a.active:after {
+  content: '';
+  position: absolute;
+  bottom: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
 }
 
 @media (max-width: 768px) {
@@ -351,10 +441,162 @@
   background: var(--seg-color, var(--color-primary));
 }
 
-/* Dark theme borders */
+/* Enhanced Diet Toggle */
+.diet-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  height: 40px;
+}
+
+.diet-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Background colors for different states */
+.diet-toggle.veg {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.12) 0%, rgba(40, 167, 69, 0.08) 100%);
+  border-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.diet-toggle.nonveg {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.12) 0%, rgba(220, 53, 69, 0.08) 100%);
+  border-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+.diet-toggle.neutral {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.12) 0%, rgba(13, 110, 253, 0.08) 100%);
+  border-color: rgba(13, 110, 253, 0.2);
+  color: #0d6efd;
+}
+
+/* Pseudo-element for ripple effect */
+.diet-toggle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+/* Animation for ripple effect */
+.diet-toggle:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(30, 30);
+    opacity: 0;
+  }
+}
+
+.diet-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.diet-toggle:hover .diet-icon {
+  transform: translateY(-2px);
+}
+
+.diet-toggle:active .diet-icon {
+  transform: translateY(0);
+}
+
+.diet-label {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+/* Add animation for toggle */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.diet-toggle-container:active .diet-toggle {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme adjustments */
 .dark-theme .diet-toggle {
-  background: var(--color-surface);
+  background-color: var(--color-surface);
   border-color: var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .diet-toggle.veg {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.12) 100%);
+  border-color: rgba(40, 167, 69, 0.3);
+}
+
+.dark-theme .diet-toggle.nonveg {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.12) 100%);
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+.dark-theme .diet-toggle.neutral {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.2) 0%, rgba(13, 110, 253, 0.12) 100%);
+  border-color: rgba(13, 110, 253, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .diet-toggle-container {
+    margin-left: 0.5rem;
+  }
+  
+  .diet-toggle {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
+  }
+  
+  .diet-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.4rem;
+    font-size: 1rem;
+  }
 }
 
 /* Active link: theme-aware text color + indicator */

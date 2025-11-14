@@ -19,60 +19,88 @@
         <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
         <li><a routerLink="/meals" routerLinkActive="active">Browse Meals</a></li>
         <li><a routerLink="/supplements" routerLinkActive="active">Supplements</a></li>
-        <ng-container *ngIf="currentUser$ | async">
+        @if (currentUser$ | async) {
           <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
-        </ng-container>
+        }
+        <li class="theme-toggle-container">
+          <button mat-icon-button class="theme-toggle" (click)="toggleTheme()" [title]="(isDark$ | async) ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            <mat-icon>{{ (isDark$ | async) ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          </button>
+        </li>
       </ul>
     </nav>
 
     <div class="nav-actions">
       <!-- Cart icon visible only for authenticated users -->
-      <a routerLink="/cart" class="cart-icon" *ngIf="currentUser$ | async">
-        🛒
-        <span class="cart-count" *ngIf="(cartItemCount$ | async) as count">{{ count }}</span>
-      </a>
+      @if (currentUser$ | async) {
+        <a routerLink="/cart" class="nav-action-icon" title="Cart">
+          🛒
+          @if (cartItemCount$ | async; as count) {
+            <span class="cart-count">{{ count }}</span>
+          }
+        </a>
+      }
 
-      <!-- Diet mode toggle visible only for authenticated users -->
-      <div class="diet-toggle" role="group" aria-label="Diet mode" *ngIf="currentUser$ | async">
-        <button type="button" class="diet-seg" [class.active]="diet==='veg'" (click)="setDiet('veg')" [attr.aria-pressed]="diet==='veg'" title="Veg">
-          <span class="dot veg" aria-hidden="true"></span>
-          <span class="label">Veg</span>
-        </button>
-        <button type="button" class="diet-seg" [class.active]="diet==='nonveg'" (click)="setDiet('nonveg')" [attr.aria-pressed]="diet==='nonveg'" title="Non-veg">
-          <span class="dot nonveg" aria-hidden="true"></span>
-          <span class="label">Non-veg</span>
-        </button>
-        <button type="button" class="diet-seg" [class.active]="diet==='neutral'" (click)="setDiet('neutral')" [attr.aria-pressed]="diet==='neutral'" title="Neutral">
-          <span class="dot neutral" aria-hidden="true"></span>
-          <span class="label">All</span>
-        </button>
-      </div>
-
-      <ng-container *ngIf="currentUser$ | async as user; else loginButtons">
-        <div class="user-menu" (click)="$event.stopPropagation()">
-          <button class="user-button" (click)="toggleUserMenu($event)" [attr.aria-label]="'Open user menu for ' + (user.name || user.email)" [attr.aria-expanded]="isUserMenuOpen">
-            <!-- Example placement in your header -->
-            <app-nav-avatar
-              [avatar]="(currentUser$ | async)?.avatar"
-              [userName]="(currentUser$ | async)?.name"
-              size="sm">
-            </app-nav-avatar>
-            <span>▼</span>
-          </button>
-          <div class="dropdown-menu" [class.show]="isUserMenuOpen">
-            <a routerLink="/profile" (click)="toggleUserMenu($event)">Profile</a>
-            <a routerLink="/orders" (click)="toggleUserMenu($event)">My Orders</a>
-            <button (click)="logout()">Logout</button>
+      <!-- Animated Diet Mode Toggle -->
+      @if (currentUser$ | async) {
+        <div class="diet-toggle-container" (click)="cycleDiet()" [title]="'Current: ' + (diet === 'veg' ? 'Vegetarian' : diet === 'nonveg' ? 'Non-Vegetarian' : 'All Foods')">
+          <div class="diet-toggle" [class.veg]="diet === 'veg'" [class.nonveg]="diet === 'nonveg'" [class.neutral]="diet === 'neutral'">
+            <div class="diet-icon">
+              @if (diet === 'veg') {
+                <span class="veg-icon">🌱</span>
+              } @else if (diet === 'nonveg') {
+                <span class="nonveg-icon">🍗</span>
+              } @else {
+                <span class="neutral-icon">🍽️</span>
+              }
+            </div>
+            <span class="diet-label">
+              @switch (diet) {
+                @case ('veg') { Veg }
+                @case ('nonveg') { Non-Veg }
+                @default { All }
+              }
+            </span>
           </div>
         </div>
-      </ng-container>
+      }
       
-      <ng-template #loginButtons>
-        <div class="auth-buttons">
-          <a routerLink="/login" class="login-btn">Login</a>
-          <a routerLink="/register" class="signup-btn">Sign Up</a>
+      @if (currentUser$ | async; as user) {
+        <div class="user-menu" (click)="$event.stopPropagation()">
+          <button class="user-button" (click)="toggleUserMenu($event)" [attr.aria-label]="'Open user menu for ' + (user.name || user.email)" [attr.aria-expanded]="isUserMenuOpen">
+            <app-nav-avatar
+              [avatar]="user.avatar"
+              [userName]="user.name || user.email"
+              size="sm">
+            </app-nav-avatar>
+            <span class="user-name">{{ user.name || user.email }}</span>
+            <mat-icon>expand_more</mat-icon>
+          </button>
+          
+          @if (isUserMenuOpen) {
+            <div class="dropdown-menu show" (click)="$event.stopPropagation()">
+              <a routerLink="/profile" class="dropdown-item">
+                <mat-icon>account_circle</mat-icon> My Profile
+              </a>
+              <a routerLink="/orders" class="dropdown-item">
+                <mat-icon>receipt</mat-icon> My Orders
+              </a>
+              <a routerLink="/settings" class="dropdown-item">
+                <mat-icon>settings</mat-icon> Settings
+              </a>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" (click)="logout()">
+                <mat-icon>logout</mat-icon> Logout
+              </button>
+            </div>
+          }
         </div>
-      </ng-template>
+      } @else {
+        <div class="login-buttons">
+          <a routerLink="/login" class="login-btn">Login</a>
+          <a routerLink="/signup" class="signup-btn">Sign Up</a>
+        </div>
+      }
     </div>
   </div>
 </header>

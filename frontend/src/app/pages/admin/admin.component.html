@@ -29,13 +29,13 @@
               <td>{{ o._id }}</td>
               <td>{{ (o.created || o.createdAt) | date:'short' }}</td>
               <td>
-                <select class="select" [(ngModel)]="o.status">
+                <select class="select" [ngModel]="o.status" (ngModelChange)="onStatusChange(o, $event)">
                   <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
                 </select>
               </td>
               <td>₹{{ o.total || o.totalAmount }}</td>
               <td>
-                <button class="btn btn-primary btn-sm" (click)="updateOrderStatus(o._id, o.status)" [disabled]="savingOrderId===o._id">
+                <button class="btn btn-primary btn-sm" (click)="updateOrderStatus(o, o.status)" [disabled]="savingOrderId===o._id">
                   {{ savingOrderId===o._id ? 'Saving…' : 'Update' }}
                 </button>
               </td>

@@ -1,0 +1,13 @@
+<app-header>
+  <!-- Theme switcher button in header -->
+  <button mat-icon-button (click)="toggleTheme()" class="theme-toggle" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+    <mat-icon>{{ isDarkTheme ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+</app-header>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Chatbot Component -->
+<app-chatbot></app-chatbot>

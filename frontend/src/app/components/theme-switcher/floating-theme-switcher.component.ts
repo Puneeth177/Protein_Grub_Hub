@@ -14,7 +14,7 @@ export class FloatingThemeSwitcherComponent {
   constructor(public themeService: ThemeService) {}
 
   toggleTheme() {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   isDark(): boolean {

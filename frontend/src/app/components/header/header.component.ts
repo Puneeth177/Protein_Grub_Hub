@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -8,18 +8,26 @@ import { NavAvatarComponent } from '../nav-avatar/nav-avatar.component';
 import { Observable, Subscription, map } from 'rxjs';
 import { DietModeService } from '../../services/diet-mode.service';
 import type { DietMode } from '../../services/diet-mode.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavAvatarComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    NavAvatarComponent,
+    MatIconModule,
+    MatButtonModule
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit {
   currentUser$: Observable<any>;
   cartItemCount$: Observable<number>;
-  isDark$!: Observable<boolean>;
+  isDark$: Observable<boolean>;
 
   // Separate states
   isNavOpen = false;
@@ -33,6 +41,7 @@ export class HeaderComponent implements OnInit {
   ) {
     this.currentUser$ = this.authService.currentUser$;
     this.cartItemCount$ = this.cartService.cartItemCount$;
+    this.isDark$ = this.themeService.isDarkTheme$;
   }
 
   diet: DietMode = 'neutral';
@@ -73,7 +82,7 @@ export class HeaderComponent implements OnInit {
   }
 
   toggleTheme() {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   onDietModeToggle() {

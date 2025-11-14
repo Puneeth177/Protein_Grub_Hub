@@ -1,6 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Theme {
   id: string;
@@ -170,13 +171,19 @@ export class ThemeService {
     }
   ];
 
-  private currentThemeSubject!: BehaviorSubject<Theme>;
-  public currentTheme$!: Observable<Theme>;
+  private currentThemeSubject: BehaviorSubject<Theme>;
+  public currentTheme$: Observable<Theme>;
+
+  // Expose isDark as an observable
+  public isDarkTheme$: Observable<boolean>;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     // Initialize the BehaviorSubject after themes array is ready
     this.currentThemeSubject = new BehaviorSubject<Theme>(this.getDefaultTheme());
     this.currentTheme$ = this.currentThemeSubject.asObservable();
+    this.isDarkTheme$ = this.currentTheme$.pipe(
+      map((theme: Theme) => theme.isDark)
+    );
     this.loadSavedTheme();
   }
 
@@ -184,27 +191,29 @@ export class ThemeService {
     return this.themes;
   }
 
-
   getCurrentTheme(): Theme {
     return this.currentThemeSubject.value;
   }
 
   // Toggle between light and dark theme
-  toggleDarkMode(): void {
-    const current = this.getCurrentTheme();
-    let nextTheme: Theme | undefined;
-    if (current && current.isDark) {
-      nextTheme = this.themes.find((t: Theme) => !t.isDark);
-    } else {
-      nextTheme = this.themes.find((t: Theme) => t.isDark);
-    }
-    if (nextTheme) {
-      this.setTheme(nextTheme.id);
+  toggleTheme(): void {
+    const currentTheme = this.currentThemeSubject.value;
+    // Find all themes with the opposite dark/light mode
+    const oppositeThemes = this.themes.filter(theme => theme.isDark !== currentTheme.isDark);
+    
+    if (oppositeThemes.length > 0) {
+      // Try to find a theme with similar name first (e.g., 'forest-green' -> 'dark-forest')
+      const similarTheme = oppositeThemes.find(theme => 
+        theme.name.includes(currentTheme.name.replace('dark-', '').replace('light-', ''))
+      );
+      
+      // If a similar theme is found, use it; otherwise use the first opposite theme
+      this.setTheme(similarTheme?.id || oppositeThemes[0].id);
     }
   }
 
   isDarkTheme(): boolean {
-    return this.getCurrentTheme().isDark;
+    return this.currentThemeSubject?.value?.isDark ?? false;
   }
 
   setTheme(themeId: string): void {

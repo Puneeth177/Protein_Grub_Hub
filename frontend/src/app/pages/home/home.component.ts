@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Meal } from '../../models/meal.model';
-import { ReviewListComponent } from '../../components/reviews/review-list.component';
 import { AuthService } from '../../services/auth.service';
+import { ReviewListComponent } from '../../components/review-list/review-list.component';
 
 const STATIC_MOCK_MEALS: Meal[] = [
   {

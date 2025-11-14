@@ -1,0 +1,88 @@
+<!-- Floating Chat Icon -->
+<div class="chatbot-icon" *ngIf="!isOpen" (click)="toggleChat()" title="Chat with us">
+  <mat-icon>chat</mat-icon>
+</div>
+
+<!-- Chat Window -->
+<div class="chatbot-container" [class.open]="isOpen">
+  <!-- Header -->
+  <div class="chat-header" (click)="toggleChat()">
+    <div class="header-content">
+      <mat-icon class="chat-icon">chat</mat-icon>
+      <span>Protein Grub Hub Assistant</span>
+    </div>
+    <button mat-icon-button class="close-button" (click)="$event.stopPropagation(); toggleChat()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chat-messages" #chatMessages>
+    <div *ngFor="let msg of messages" class="message" 
+         [class.user]="msg.isUser" 
+         [class.bot]="!msg.isUser">
+      <!-- Message Bubble -->
+      <div class="message-bubble">
+        {{ msg.text }}
+      </div>
+
+      <!-- TAGS under bot messages -->
+      <div class="message-tags" *ngIf="!msg.isUser && msg.tags?.length">
+        <div class="tags-container" *ngIf="msg.tags && msg.tags.length > 0">
+          <button 
+            *ngFor="let tag of msg.tags.slice(0, 4)" 
+            class="tag-chip"
+            (click)="suggestQuery(tag)"
+            [attr.aria-label]="'Tag: ' + tag"
+          >
+            {{ tag }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div class="typing-indicator" *ngIf="isLoading">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS (first-time help) -->
+  <div class="quick-actions" *ngIf="!isLoading && messages.length <= 1">
+    <button mat-stroked-button (click)="suggestQuery('How do I track my protein?')">
+      <mat-icon>track_changes</mat-icon> Track Protein
+    </button>
+    <button mat-stroked-button (click)="suggestQuery('What are todays specials?')">
+      <mat-icon>star</mat-icon> Specials
+    </button>
+    <button mat-stroked-button (click)="suggestQuery('How does delivery work?')">
+      <mat-icon>delivery_dining</mat-icon> Delivery
+    </button>
+  </div>
+
+  <!-- Recommended Frequent Tags -->
+  <div class="frequent-tags" *ngIf="messages.length > 1">
+    <div class="tags-container">
+      <button 
+        *ngFor="let t of frequentQueries | slice:0:5"
+        class="tag-chip"
+        (click)="suggestQuery(t)"
+        [attr.aria-label]="'Ask about ' + t">
+        {{ t }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="input-container">
+    <input 
+      type="text" 
+      [(ngModel)]="userInput" 
+      placeholder="Ask me anything about Protein Grub Hub..."
+      (keyup.enter)="sendMessage()"
+    >
+    <button mat-icon-button (click)="sendMessage()" [disabled]="!userInput.trim()">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+</div>

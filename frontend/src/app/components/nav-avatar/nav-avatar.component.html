@@ -1,11 +1,22 @@
-<div class="nav-avatar" [ngClass]="'avatar-' + size">
-  <ng-container *ngIf="avatar?.url; else initialsTpl">
-    <img [src]="avatar?.url" [alt]="userName || 'User avatar'" class="avatar-image" />
-  </ng-container>
+<div class="nav-avatar-container">
+  <div class="nav-avatar" [ngClass]="'avatar-' + size">
+    <ng-container *ngIf="avatar?.url; else initialsTpl">
+      <img [src]="avatar?.url" [alt]="userName || 'User avatar'" class="avatar-image" />
+    </ng-container>
 
-  <ng-template #initialsTpl>
-    <div class="avatar-initials">
-      {{ getInitials(userName) }}
+    <ng-template #initialsTpl>
+      <div class="avatar-initials">
+        {{ getInitials(userName) }}
+      </div>
+    </ng-template>
+  </div>
+  
+  <div class="location-container" (click)="$event.stopPropagation()">
+    <mat-icon class="location-icon" [class.loading]="isLoadingLocation">
+      {{ isLoadingLocation ? 'refresh' : 'location_on' }}
+    </mat-icon>
+    <div class="location-text" [title]="currentLocation">
+      {{ currentLocation }}
     </div>
-  </ng-template>
+  </div>
 </div>

@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { ReviewComponent } from './components/review/review.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { OrderTrackingComponent } from './pages/order-tracking/order-tracking.component';
+
 
 export const routes: Routes = [
   {
@@ -79,5 +83,13 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: ''
+  },
+  {
+    path: 'track-order/:id',
+    component: OrderTrackingComponent
+  },
+  { 
+    path: 'reviews',
+    component: ReviewComponent
   }
 ];

@@ -14,10 +14,9 @@ export interface HealthInfo {
 }
 
 export interface User {
-  _id?: string;
-  id?: string;
-  email: string;
+  _id: string;
   name: string;
+  email: string;
   isAuthenticated: boolean;
   proteinGoal?: number;
   onboardingCompleted?: boolean;
@@ -42,6 +41,7 @@ export interface AuthResponse {
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  currentUserValue: User | null = null;
   private readonly API_URL = environment.apiUrl?.trim() || 'http://localhost:3000/api';
 
   private isServer = typeof window === 'undefined';

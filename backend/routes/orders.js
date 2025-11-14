@@ -8,6 +8,7 @@ const { sendMail } = require('../services/email/emailService');
 const templates = require('../services/email/templates');
 const Product = require('../models/product.model');
 const Reservation = require('../models/reservation.model');
+const requireAdmin = require('../middleware/requireAdmin');
 
 // Get all orders for a user
 router.get('/', auth, async (req, res) => {
@@ -19,6 +20,27 @@ router.get('/', auth, async (req, res) => {
         console.error('Error fetching orders:', error);
         res.status(500).json({ 
             message: 'Failed to fetch orders',
+            error: error.message 
+        });
+    }
+});
+
+// Get all undelivered orders (admin only)
+router.get('/admin/undelivered', [auth, requireAdmin], async (req, res) => {
+    try {
+        console.log('Fetching undelivered orders...');
+        const orders = await Order.find({ 
+            status: { $ne: 'delivered' }
+        })
+        .populate('userId', 'name email')
+        .sort({ created: -1 });
+        
+        console.log(`Found ${orders.length} undelivered orders`);
+        res.json(orders);
+    } catch (error) {
+        console.error('Error fetching undelivered orders:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch undelivered orders',
             error: error.message 
         });
     }
@@ -142,25 +164,63 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
-const requireAdmin = require('../middleware/requireAdmin');
-
 // Update order status (admin only)
 router.put('/:id/status', auth, requireAdmin, async (req, res) => {
+    console.log('Update status request:', {
+        params: req.params,
+        body: req.body,
+        user: req.user
+    });
+    
     try {
         const { status } = req.body;
-        const order = await Order.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true }
-        );
         
+        if (!status) {
+            console.error('No status provided in request body');
+            return res.status(400).json({ message: 'Status is required' });
+        }
+        
+        console.log(`Updating order ${req.params.id} status to:`, status);
+        
+        // First get the current order to check if we need to update payment status or order status
+        const order = await Order.findById(req.params.id);
         if (!order) {
+            console.error('Order not found:', req.params.id);
             return res.status(404).json({ message: 'Order not found' });
         }
         
-        res.json(order);
+        // Update the order status
+        order.status = status;
+        
+        // If the new status is 'delivered', also update the payment status to 'completed' if it's not already
+        if (status === 'delivered' && order.payment.status !== 'completed') {
+            order.payment.status = 'completed';
+        }
+        
+        // Save the updated order
+        await order.save();
+        
+        // Get the updated order with all fields populated
+        const updatedOrder = await Order.findById(order._id);
+        
+        if (!order) {
+            console.error('Order not found:', req.params.id);
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        console.log('Order status updated successfully:', {
+            orderId: updatedOrder._id,
+            newStatus: updatedOrder.status,
+            paymentStatus: updatedOrder.payment.status
+        });
+        
+        res.json(updatedOrder);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ 
+            message: 'Server error',
+            error: error.message 
+        });
     }
 });
 

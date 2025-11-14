@@ -1,15 +1,46 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { getInitials } from '../../utils/image';
+import { LocationService } from '../../services/location.service';
+import { Subscription } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-nav-avatar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './nav-avatar.component.html',
   styleUrls: ['./nav-avatar.component.css']
 })
-export class NavAvatarComponent {
+export class NavAvatarComponent implements OnInit, OnDestroy {
+  private locationSubscription!: Subscription;
+  currentLocation: string = '';
+  isLoadingLocation = true;
+
+  constructor(private locationService: LocationService) {}
+
+  ngOnInit() {
+    this.locationSubscription = this.locationService.getCurrentLocation().subscribe({
+      next: (location) => {
+        this.isLoadingLocation = false;
+        if (location?.address) {
+          this.currentLocation = location.address;
+        } else {
+          this.currentLocation = 'Select location';
+        }
+      },
+      error: () => {
+        this.isLoadingLocation = false;
+        this.currentLocation = 'Select location';
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.locationSubscription) {
+      this.locationSubscription.unsubscribe();
+    }
+  }
   @Input() avatar: { url?: string; id?: string } | null = null;
   @Input() userName: string = '';
   @Input() size: 'sm' | 'md' | 'lg' = 'sm';

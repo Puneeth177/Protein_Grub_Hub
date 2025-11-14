@@ -15,7 +15,9 @@ import { AuthService } from '../../services/auth.service';
 })
 
 export class ReviewListComponent implements OnInit {
-  @Input() productId: string | null = 'home_testimonials';
+  // If no productId is provided, show reviews for all products/site-wide
+  @Input() productId: string | null = null;
+
     // add inside the class
     round(n: number): number { return Math.round(n); }
     ceil(n: number): number { return Math.ceil(n); }
@@ -67,7 +69,7 @@ export class ReviewListComponent implements OnInit {
     ngOnInit() {
         // SSR-safe: we already skip hydration, but this is fine
         const user = this.authService.getCurrentUser?.() || this.authService['currentUserSubject']?.value;
-        this.currentUserId = user?._id || user?.id || null;
+        this.currentUserId = user?._id || user?._id || null;
 
         this.fetch();
     }

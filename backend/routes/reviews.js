@@ -223,8 +223,9 @@ router.put('/:reviewId', auth, async (req, res) => {
   }
 });
 
-// Delete review (soft delete)
+// Delete review (hard delete)
 router.delete('/:reviewId', auth, async (req, res) => {
+
   try {
     const { reviewId } = req.params;
     const review = await Review.findById(reviewId);
@@ -259,10 +260,11 @@ router.delete('/:reviewId', auth, async (req, res) => {
         return res.status(403).json({ message: 'Forbidden' });
     }
 
-    review.status = 'deleted';
-    await review.save();
-    res.json({ message: 'Review deleted' });
+    // Hard delete the review document from MongoDB
+    await Review.deleteOne({ _id: review._id });
+    res.json({ success: true, message: 'Review deleted' });
   } catch (err) {
+
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }

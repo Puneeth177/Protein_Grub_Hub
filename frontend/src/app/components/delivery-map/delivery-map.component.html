@@ -1,0 +1,25 @@
+<div class="delivery-container">
+  <div class="map-container" #mapContainer></div>
+  
+  <div class="status-container">
+    <h3>Order Status: {{ currentStatus }}</h3>
+    
+    <div class="status-timeline">
+      <div *ngFor="let status of (deliveryService.getCurrentStatus() | async) || []" 
+           class="status-step" 
+           [class.completed]="status.completed"
+           [class.active]="status.active">
+        <div class="status-icon">
+          <span *ngIf="status.completed">✓</span>
+          <span *ngIf="!status.completed && !status.active">•</span>
+          <div *ngIf="status.active" class="pulse-dot"></div>
+        </div>
+        <div class="status-details">
+          <div class="status-title">{{ status.status }}</div>
+          <div class="status-description">{{ status.description }}</div>
+          <div class="status-time">{{ status.time }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
